@@ -61,11 +61,9 @@ func (s *Service) UpdateProducts(sellerId uint64, productUpdates []models.Produc
 		sort.Slice(sellerProductIDs, func(i, j int) bool { return sellerProductIDs[i] < sellerProductIDs[j] })
 	}
 	// validatedUpdates := make([]models.ProductUpdate, 0, len(productUpdates))
-	var (
-		toAdd []models.Product
-		toDel []models.Product
-		toUpd []models.Product
-	)
+	toAdd := make([]models.Product, 0)
+	toUpd := make([]models.Product, 0)
+	toDel := make([]models.Product, 0)
 
 	for _, upd := range productUpdates {
 		switch {
@@ -82,6 +80,7 @@ func (s *Service) UpdateProducts(sellerId uint64, productUpdates []models.Produc
 
 	validToAdd := make([]models.Product, 0, len(toAdd))
 	validToUpd := make([]models.Product, 0, len(toUpd))
+	validToDel := make([]models.Product, 0, len(toDel))
 	validationErrs := make([]error, 0)
 
 	for _, product := range toAdd {
@@ -98,20 +97,23 @@ func (s *Service) UpdateProducts(sellerId uint64, productUpdates []models.Produc
 			validToUpd = append(validToUpd, product)
 		}
 	}
+	validToDel = append(validToDel, toDel...) // не знаю как на тестах положительно сравнить одинаково наполненные слайсы с разной capacity
 
-	repoUpdateResult, err := s.repo.ManageProducts(sellerId, validToAdd, toDel, validToUpd)
+	if len(validToAdd) == 0 && len(validToDel) == 0 && len(validToUpd) == 0 {
+		ur := UpdateResults{}
+		ur.Errors = append(ur.Errors, validationErrs...)
+		return ur, nil
+	}
+
+	repoUpdateResult, err := s.repo.ManageProducts(sellerId, validToAdd, validToDel, validToUpd)
 	if err != nil {
 		log.Println(err)
 		return UpdateResults{}, errors.New("repo err")
 	}
 
 	totalErrors := make([]error, 0, len(validationErrs)+len(repoUpdateResult.Errors))
-	for _, err := range validationErrs {
-		totalErrors = append(totalErrors, err)
-	}
-	for _, err := range repoUpdateResult.Errors {
-		totalErrors = append(totalErrors, err)
-	}
+	totalErrors = append(totalErrors, validationErrs...)
+	totalErrors = append(totalErrors, repoUpdateResult.Errors...)
 
 	return UpdateResults{
 		Added:   repoUpdateResult.Added,
@@ -121,9 +123,17 @@ func (s *Service) UpdateProducts(sellerId uint64, productUpdates []models.Produc
 	}, nil
 }
 
-func contains(s []uint64, elem uint64) bool {
-	i := sort.Search(len(s), func(i int) bool { return s[i] >= elem })
-	return s[i] == elem
+func contains(slice []uint64, elem uint64) bool {
+	if len(slice) == 0 {
+		return false
+	}
+
+	i := sort.Search(len(slice), func(i int) bool { return slice[i] >= elem })
+	if i >= len(slice) || i < 0 {
+		return false
+	}
+
+	return slice[i] == elem
 }
 
 func (s *Service) ProductsByFilter(filter RequestFilter) ([]models.Product, error) {

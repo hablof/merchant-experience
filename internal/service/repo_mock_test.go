@@ -17,8 +17,8 @@ import (
 type RepoMock struct {
 	t minimock.Tester
 
-	funcManageProducts          func(sellerId uint64, productsToDelete []models.Product, productsToUpdate []models.Product, productsToInsert []models.Product) (u1 UpdateResults, err error)
-	inspectFuncManageProducts   func(sellerId uint64, productsToDelete []models.Product, productsToUpdate []models.Product, productsToInsert []models.Product)
+	funcManageProducts          func(sellerId uint64, productsToAdd []models.Product, productsToDelete []models.Product, productsToUpdate []models.Product) (u1 UpdateResults, err error)
+	inspectFuncManageProducts   func(sellerId uint64, productsToAdd []models.Product, productsToDelete []models.Product, productsToUpdate []models.Product)
 	afterManageProductsCounter  uint64
 	beforeManageProductsCounter uint64
 	ManageProductsMock          mRepoMockManageProducts
@@ -75,9 +75,9 @@ type RepoMockManageProductsExpectation struct {
 // RepoMockManageProductsParams contains parameters of the Repo.ManageProducts
 type RepoMockManageProductsParams struct {
 	sellerId         uint64
+	productsToAdd    []models.Product
 	productsToDelete []models.Product
 	productsToUpdate []models.Product
-	productsToInsert []models.Product
 }
 
 // RepoMockManageProductsResults contains results of the Repo.ManageProducts
@@ -87,7 +87,7 @@ type RepoMockManageProductsResults struct {
 }
 
 // Expect sets up expected params for Repo.ManageProducts
-func (mmManageProducts *mRepoMockManageProducts) Expect(sellerId uint64, productsToDelete []models.Product, productsToUpdate []models.Product, productsToInsert []models.Product) *mRepoMockManageProducts {
+func (mmManageProducts *mRepoMockManageProducts) Expect(sellerId uint64, productsToAdd []models.Product, productsToDelete []models.Product, productsToUpdate []models.Product) *mRepoMockManageProducts {
 	if mmManageProducts.mock.funcManageProducts != nil {
 		mmManageProducts.mock.t.Fatalf("RepoMock.ManageProducts mock is already set by Set")
 	}
@@ -96,7 +96,7 @@ func (mmManageProducts *mRepoMockManageProducts) Expect(sellerId uint64, product
 		mmManageProducts.defaultExpectation = &RepoMockManageProductsExpectation{}
 	}
 
-	mmManageProducts.defaultExpectation.params = &RepoMockManageProductsParams{sellerId, productsToDelete, productsToUpdate, productsToInsert}
+	mmManageProducts.defaultExpectation.params = &RepoMockManageProductsParams{sellerId, productsToAdd, productsToDelete, productsToUpdate}
 	for _, e := range mmManageProducts.expectations {
 		if minimock.Equal(e.params, mmManageProducts.defaultExpectation.params) {
 			mmManageProducts.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmManageProducts.defaultExpectation.params)
@@ -107,7 +107,7 @@ func (mmManageProducts *mRepoMockManageProducts) Expect(sellerId uint64, product
 }
 
 // Inspect accepts an inspector function that has same arguments as the Repo.ManageProducts
-func (mmManageProducts *mRepoMockManageProducts) Inspect(f func(sellerId uint64, productsToDelete []models.Product, productsToUpdate []models.Product, productsToInsert []models.Product)) *mRepoMockManageProducts {
+func (mmManageProducts *mRepoMockManageProducts) Inspect(f func(sellerId uint64, productsToAdd []models.Product, productsToDelete []models.Product, productsToUpdate []models.Product)) *mRepoMockManageProducts {
 	if mmManageProducts.mock.inspectFuncManageProducts != nil {
 		mmManageProducts.mock.t.Fatalf("Inspect function is already set for RepoMock.ManageProducts")
 	}
@@ -131,7 +131,7 @@ func (mmManageProducts *mRepoMockManageProducts) Return(u1 UpdateResults, err er
 }
 
 // Set uses given function f to mock the Repo.ManageProducts method
-func (mmManageProducts *mRepoMockManageProducts) Set(f func(sellerId uint64, productsToDelete []models.Product, productsToUpdate []models.Product, productsToInsert []models.Product) (u1 UpdateResults, err error)) *RepoMock {
+func (mmManageProducts *mRepoMockManageProducts) Set(f func(sellerId uint64, productsToAdd []models.Product, productsToDelete []models.Product, productsToUpdate []models.Product) (u1 UpdateResults, err error)) *RepoMock {
 	if mmManageProducts.defaultExpectation != nil {
 		mmManageProducts.mock.t.Fatalf("Default expectation is already set for the Repo.ManageProducts method")
 	}
@@ -146,14 +146,14 @@ func (mmManageProducts *mRepoMockManageProducts) Set(f func(sellerId uint64, pro
 
 // When sets expectation for the Repo.ManageProducts which will trigger the result defined by the following
 // Then helper
-func (mmManageProducts *mRepoMockManageProducts) When(sellerId uint64, productsToDelete []models.Product, productsToUpdate []models.Product, productsToInsert []models.Product) *RepoMockManageProductsExpectation {
+func (mmManageProducts *mRepoMockManageProducts) When(sellerId uint64, productsToAdd []models.Product, productsToDelete []models.Product, productsToUpdate []models.Product) *RepoMockManageProductsExpectation {
 	if mmManageProducts.mock.funcManageProducts != nil {
 		mmManageProducts.mock.t.Fatalf("RepoMock.ManageProducts mock is already set by Set")
 	}
 
 	expectation := &RepoMockManageProductsExpectation{
 		mock:   mmManageProducts.mock,
-		params: &RepoMockManageProductsParams{sellerId, productsToDelete, productsToUpdate, productsToInsert},
+		params: &RepoMockManageProductsParams{sellerId, productsToAdd, productsToDelete, productsToUpdate},
 	}
 	mmManageProducts.expectations = append(mmManageProducts.expectations, expectation)
 	return expectation
@@ -166,15 +166,15 @@ func (e *RepoMockManageProductsExpectation) Then(u1 UpdateResults, err error) *R
 }
 
 // ManageProducts implements Repo
-func (mmManageProducts *RepoMock) ManageProducts(sellerId uint64, productsToDelete []models.Product, productsToUpdate []models.Product, productsToInsert []models.Product) (u1 UpdateResults, err error) {
+func (mmManageProducts *RepoMock) ManageProducts(sellerId uint64, productsToAdd []models.Product, productsToDelete []models.Product, productsToUpdate []models.Product) (u1 UpdateResults, err error) {
 	mm_atomic.AddUint64(&mmManageProducts.beforeManageProductsCounter, 1)
 	defer mm_atomic.AddUint64(&mmManageProducts.afterManageProductsCounter, 1)
 
 	if mmManageProducts.inspectFuncManageProducts != nil {
-		mmManageProducts.inspectFuncManageProducts(sellerId, productsToDelete, productsToUpdate, productsToInsert)
+		mmManageProducts.inspectFuncManageProducts(sellerId, productsToAdd, productsToDelete, productsToUpdate)
 	}
 
-	mm_params := &RepoMockManageProductsParams{sellerId, productsToDelete, productsToUpdate, productsToInsert}
+	mm_params := &RepoMockManageProductsParams{sellerId, productsToAdd, productsToDelete, productsToUpdate}
 
 	// Record call args
 	mmManageProducts.ManageProductsMock.mutex.Lock()
@@ -191,7 +191,7 @@ func (mmManageProducts *RepoMock) ManageProducts(sellerId uint64, productsToDele
 	if mmManageProducts.ManageProductsMock.defaultExpectation != nil {
 		mm_atomic.AddUint64(&mmManageProducts.ManageProductsMock.defaultExpectation.Counter, 1)
 		mm_want := mmManageProducts.ManageProductsMock.defaultExpectation.params
-		mm_got := RepoMockManageProductsParams{sellerId, productsToDelete, productsToUpdate, productsToInsert}
+		mm_got := RepoMockManageProductsParams{sellerId, productsToAdd, productsToDelete, productsToUpdate}
 		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
 			mmManageProducts.t.Errorf("RepoMock.ManageProducts got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
 		}
@@ -203,9 +203,9 @@ func (mmManageProducts *RepoMock) ManageProducts(sellerId uint64, productsToDele
 		return (*mm_results).u1, (*mm_results).err
 	}
 	if mmManageProducts.funcManageProducts != nil {
-		return mmManageProducts.funcManageProducts(sellerId, productsToDelete, productsToUpdate, productsToInsert)
+		return mmManageProducts.funcManageProducts(sellerId, productsToAdd, productsToDelete, productsToUpdate)
 	}
-	mmManageProducts.t.Fatalf("Unexpected call to RepoMock.ManageProducts. %v %v %v %v", sellerId, productsToDelete, productsToUpdate, productsToInsert)
+	mmManageProducts.t.Fatalf("Unexpected call to RepoMock.ManageProducts. %v %v %v %v", sellerId, productsToAdd, productsToDelete, productsToUpdate)
 	return
 }
 

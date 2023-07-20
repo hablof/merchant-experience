@@ -5,6 +5,10 @@ import (
 	"unicode/utf8"
 )
 
+var (
+	ErrTooLongName = errors.New("too long name")
+)
+
 type ProductUpdate struct {
 	Product Product
 	// SellerId  uint64
@@ -20,7 +24,7 @@ type Product struct {
 
 func (p Product) Validate() error {
 	if utf8.RuneCountInString(p.Name) > 100 {
-		return errors.New("too long name")
+		return ErrTooLongName
 	}
 
 	return nil
