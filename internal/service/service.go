@@ -10,10 +10,10 @@ import (
 )
 
 type Service struct {
-	repo Repo
+	repo Repository
 }
 
-type Repo interface {
+type Repository interface {
 	SellerProducts(sellerId uint64) ([]models.Product, error)
 	SellerProductIDs(sellerId uint64) ([]uint64, error)
 
@@ -25,12 +25,14 @@ type Repo interface {
 		productsToAdd []models.Product,
 		productsToDelete []models.Product,
 		productsToUpdate []models.Product,
-	) (UpdateResults, error)
+	) error
+
+	ProductsByFilter(filter RequestFilter) ([]models.Product, error)
 }
 
-type ManageProductsError struct {
-	Errors error
-}
+// type ManageProductsError struct {
+// 	Errors error
+// }
 
 type RequestFilter struct {
 	SellerId  uint64
@@ -105,20 +107,18 @@ func (s *Service) UpdateProducts(sellerId uint64, productUpdates []models.Produc
 		return ur, nil
 	}
 
-	repoUpdateResult, err := s.repo.ManageProducts(sellerId, validToAdd, validToDel, validToUpd)
-	if err != nil {
+	if err := s.repo.ManageProducts(sellerId, validToAdd, validToDel, validToUpd); err != nil {
 		log.Println(err)
 		return UpdateResults{}, errors.New("repo err")
 	}
 
-	totalErrors := make([]error, 0, len(validationErrs)+len(repoUpdateResult.Errors))
+	totalErrors := make([]error, 0, len(validationErrs))
 	totalErrors = append(totalErrors, validationErrs...)
-	totalErrors = append(totalErrors, repoUpdateResult.Errors...)
 
 	return UpdateResults{
-		Added:   repoUpdateResult.Added,
-		Updated: repoUpdateResult.Updated,
-		Deleted: repoUpdateResult.Deleted,
+		Added:   uint64(len(validToAdd)),
+		Updated: uint64(len(validToUpd)),
+		Deleted: uint64(len(validToDel)),
 		Errors:  totalErrors,
 	}, nil
 }
@@ -138,5 +138,11 @@ func contains(slice []uint64, elem uint64) bool {
 
 func (s *Service) ProductsByFilter(filter RequestFilter) ([]models.Product, error) {
 
-	panic("unimplemented")
+	products, err := s.repo.ProductsByFilter(filter)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("repo err")
+	}
+
+	return products, nil
 }

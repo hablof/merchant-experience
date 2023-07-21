@@ -16,10 +16,10 @@ type ProductUpdate struct {
 }
 
 type Product struct {
-	OfferId  uint64
-	Name     string
-	Price    uint64
-	Quantity uint64
+	OfferId  uint64 `db:"offer_id"`
+	Name     string `db:"name"`
+	Price    uint64 `db:"price"`
+	Quantity uint64 `db:"quantity"`
 }
 
 func (p Product) Validate() error {
