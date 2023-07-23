@@ -138,6 +138,7 @@ func contains(slice []uint64, elem uint64) bool {
 
 func (s *Service) ProductsByFilter(filter RequestFilter) ([]models.Product, error) {
 
+	// filter.Substring = strings.TrimSpace(filter.Substring)
 	products, err := s.repo.ProductsByFilter(filter)
 	if err != nil {
 		log.Println(err)

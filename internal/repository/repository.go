@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"log"
-	"strings"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -163,7 +162,9 @@ func (r *Repository) ProductsByFilter(filter service.RequestFilter) ([]models.Pr
 
 	if filter.Substring != "" {
 		selectQuery = selectQuery.Where(sq.Like{
-			nameCol: "%" + strings.TrimSpace(filter.Substring) + "%",
+			// пробелы должны быть отрезаны на слоях выше
+			nameCol: "%" + filter.Substring + "%",
+			// nameCol: "%" + strings.TrimSpace(filter.Substring) + "%",
 		})
 	}
 

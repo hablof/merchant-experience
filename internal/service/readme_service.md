@@ -1,4 +1,8 @@
-## метод UpdateProducts
+## Важное замечание по структуре models.Product
+Хотя структура и содержит поле `SellerId`, оно не используется в методе (s *Service) UpdateProducts.
+
+
+## метод (s *Service) UpdateProducts
 
 Должен обновить данные в репозитории
 
