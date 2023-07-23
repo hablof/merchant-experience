@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/hablof/product-registration/internal/models"
@@ -34,6 +35,73 @@ func TestRepository_ManageProducts(t *testing.T) {
 			mockBehaviour: func(m sqlxmock.Sqlmock) {
 			},
 			wantErr: ErrEmptyRequest,
+		},
+		{
+			name:             "transaction start failed",
+			sellerId:         42,
+			productsToAdd:    []models.Product{},
+			productsToDelete: []models.Product{{OfferId: 1, Name: "name1", Price: 1, Quantity: 1}},
+			productsToUpdate: []models.Product{},
+			mockBehaviour: func(m sqlxmock.Sqlmock) {
+				m.ExpectBegin().WillReturnError(errors.New("cannot start tx"))
+			},
+			wantErr: ErrTxFailed,
+		},
+		{
+			name:             "insert query exec failed",
+			sellerId:         42,
+			productsToAdd:    []models.Product{{OfferId: 1, Name: "name1", Price: 1, Quantity: 1}},
+			productsToDelete: []models.Product{},
+			productsToUpdate: []models.Product{},
+			mockBehaviour: func(m sqlxmock.Sqlmock) {
+				m.ExpectBegin()
+				m.ExpectExec(`INSERT INTO products (seller_id,offer_id,name,price,quantity) 
+				VALUES ($1,$2,$3,$4,$5) ON CONFLICT ON CONSTRAINT no_duplicates DO UPDATE SET
+				name = EXCLUDED.name, price = EXCLUDED.price, quantity = EXCLUDED.quantity`).
+					WillReturnError(errors.New("exec error"))
+			},
+			wantErr: ErrQueryExecFailed,
+		},
+		{
+			name:             "insert query exec result with error",
+			sellerId:         42,
+			productsToAdd:    []models.Product{{OfferId: 1, Name: "name1", Price: 1, Quantity: 1}},
+			productsToDelete: []models.Product{},
+			productsToUpdate: []models.Product{},
+			mockBehaviour: func(m sqlxmock.Sqlmock) {
+				m.ExpectBegin()
+				m.ExpectExec(`INSERT INTO products (seller_id,offer_id,name,price,quantity) 
+				VALUES ($1,$2,$3,$4,$5) ON CONFLICT ON CONSTRAINT no_duplicates DO UPDATE SET
+				name = EXCLUDED.name, price = EXCLUDED.price, quantity = EXCLUDED.quantity`).
+					WillReturnResult(sqlxmock.NewErrorResult(errors.New("result exec err")))
+			},
+			wantErr: ErrQueryExecFailed,
+		},
+		{
+			name:             "delete query exec failed",
+			sellerId:         42,
+			productsToAdd:    []models.Product{},
+			productsToDelete: []models.Product{{OfferId: 1, Name: "name1", Price: 1, Quantity: 1}},
+			productsToUpdate: []models.Product{},
+			mockBehaviour: func(m sqlxmock.Sqlmock) {
+				m.ExpectBegin()
+				m.ExpectExec("DELETE FROM products WHERE offer_id IN ($1) AND seller_id = $2").
+					WillReturnError(errors.New("exec error"))
+			},
+			wantErr: ErrQueryExecFailed,
+		},
+		{
+			name:             "delete query exec result with error",
+			sellerId:         42,
+			productsToAdd:    []models.Product{},
+			productsToDelete: []models.Product{{OfferId: 1, Name: "name1", Price: 1, Quantity: 1}},
+			productsToUpdate: []models.Product{},
+			mockBehaviour: func(m sqlxmock.Sqlmock) {
+				m.ExpectBegin()
+				m.ExpectExec("DELETE FROM products WHERE offer_id IN ($1) AND seller_id = $2").
+					WillReturnResult(sqlxmock.NewErrorResult(errors.New("result exec err")))
+			},
+			wantErr: ErrQueryExecFailed,
 		},
 		{
 			name:          "request to delete only",
@@ -151,6 +219,20 @@ func TestRepository_ProductsByFilter(t *testing.T) {
 		want          []models.Product
 		wantErr       error
 	}{
+		{
+			name: "error query execution",
+			filter: service.RequestFilter{
+				SellerIDs: []uint64{1, 2, 3},
+				OfferIDs:  []uint64{1},
+				Substring: "err",
+			},
+			mockBehaviour: func(m sqlxmock.Sqlmock) {
+				reg := `SELECT`
+				m.ExpectQuery(reg).WithArgs(1, 2, 3, 1, "err").WillReturnError(errors.New("error query execution"))
+			},
+			want:    nil,
+			wantErr: ErrQueryExecFailed,
+		},
 		{
 			name: "filter by seller id",
 			filter: service.RequestFilter{

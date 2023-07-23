@@ -11,44 +11,14 @@ import (
 
 var (
 	productsToAdd = []models.Product{
-		{
-			OfferId:  1,
-			Name:     "name1",
-			Price:    1,
-			Quantity: 1,
-		},
-		{
-			OfferId:  2,
-			Name:     "name2",
-			Price:    2,
-			Quantity: 2,
-		},
-		{
-			OfferId:  3,
-			Name:     "name3",
-			Price:    3,
-			Quantity: 3,
-		},
+		{OfferId: 1, Name: "name1", Price: 1, Quantity: 1},
+		{OfferId: 2, Name: "name2", Price: 2, Quantity: 2},
+		{OfferId: 3, Name: "name3", Price: 3, Quantity: 3},
 	}
 	productsToUpd = []models.Product{
-		{
-			OfferId:  1,
-			Name:     "name1",
-			Price:    10,
-			Quantity: 1,
-		},
-		{
-			OfferId:  2,
-			Name:     "name2",
-			Price:    20,
-			Quantity: 2,
-		},
-		{
-			OfferId:  3,
-			Name:     "name3",
-			Price:    30,
-			Quantity: 3,
-		},
+		{OfferId: 1, Name: "name1", Price: 10, Quantity: 1},
+		{OfferId: 2, Name: "name2", Price: 20, Quantity: 2},
+		{OfferId: 3, Name: "name3", Price: 30, Quantity: 3},
 	}
 )
 
