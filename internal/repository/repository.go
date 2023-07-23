@@ -149,7 +149,9 @@ func (r *Repository) ManageProducts(
 }
 
 func (r *Repository) ProductsByFilter(filter service.RequestFilter) ([]models.Product, error) {
-	selectQuery := r.initQuery.Select(sellerIdCol, offerIdCol, nameCol, priceCol, quantityCol)
+	selectQuery := r.initQuery.
+		Select(sellerIdCol, offerIdCol, nameCol, priceCol, quantityCol).
+		From(tableName)
 
 	if len(filter.SellerIDs) > 0 {
 		selectQuery = selectQuery.Where(sq.Eq{sellerIdCol: filter.SellerIDs}) // WHERE ... in (...) construction
@@ -159,9 +161,10 @@ func (r *Repository) ProductsByFilter(filter service.RequestFilter) ([]models.Pr
 		selectQuery = selectQuery.Where(sq.Eq{offerIdCol: filter.OfferIDs})
 	}
 
-	filter.Substring = strings.TrimSpace(filter.Substring)
 	if filter.Substring != "" {
-		selectQuery = selectQuery.Where(sq.Like{nameCol: filter.Substring})
+		selectQuery = selectQuery.Where(sq.Like{
+			nameCol: "%" + strings.TrimSpace(filter.Substring) + "%",
+		})
 	}
 
 	selectQueryString, args, err := selectQuery.Limit(defaultLimit).ToSql()

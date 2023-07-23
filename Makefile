@@ -9,7 +9,9 @@ unit-test:
 # тесты с реальной базой
 up-test-db:
 	docker run -p 5432:5432 -e POSTGRES_PASSWORD=1234 -e POSTGRES_DB=integration_testing -d --name testing-postgres --rm postgres
-down-test-db:
-	docker stop testing-postgres
+
 db-test:
 	go test internal/repository/repository_integration_test.go internal/repository/repository.go
+
+down-test-db:
+	docker stop testing-postgres
