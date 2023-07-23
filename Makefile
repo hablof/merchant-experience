@@ -12,4 +12,4 @@ up-test-db:
 down-test-db:
 	docker stop testing-postgres
 db-test:
-	go test ./internal/repository
+	go test internal/repository/repository_integration_test.go internal/repository/repository.go

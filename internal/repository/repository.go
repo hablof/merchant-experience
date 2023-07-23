@@ -5,10 +5,12 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"strings"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/hablof/product-registration/internal/models"
+	"github.com/hablof/product-registration/internal/service"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -19,6 +21,10 @@ const (
 	nameCol     = "name"
 	priceCol    = "price"
 	quantityCol = "quantity"
+)
+
+const (
+	defaultLimit = 100
 )
 
 var (
@@ -140,4 +146,38 @@ func (r *Repository) ManageProducts(
 	}
 
 	return nil
+}
+
+func (r *Repository) ProductsByFilter(filter service.RequestFilter) ([]models.Product, error) {
+	selectQuery := r.initQuery.Select(sellerIdCol, offerIdCol, nameCol, priceCol, quantityCol)
+
+	if len(filter.SellerIDs) > 0 {
+		selectQuery = selectQuery.Where(sq.Eq{sellerIdCol: filter.SellerIDs}) // WHERE ... in (...) construction
+	}
+
+	if len(filter.OfferIDs) > 0 {
+		selectQuery = selectQuery.Where(sq.Eq{offerIdCol: filter.OfferIDs})
+	}
+
+	filter.Substring = strings.TrimSpace(filter.Substring)
+	if filter.Substring != "" {
+		selectQuery = selectQuery.Where(sq.Like{nameCol: filter.Substring})
+	}
+
+	selectQueryString, args, err := selectQuery.Limit(defaultLimit).ToSql()
+	if err != nil {
+		log.Println(err)
+		return nil, ErrQueryBuilderFailed
+	}
+
+	ctx, cf := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cf()
+
+	products := make([]models.Product, 0)
+	if err := r.db.SelectContext(ctx, &products, selectQueryString, args...); err != nil {
+		log.Println(err)
+		return nil, ErrQueryExecFailed
+	}
+
+	return products, nil
 }

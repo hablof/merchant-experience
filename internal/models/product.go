@@ -16,6 +16,7 @@ type ProductUpdate struct {
 }
 
 type Product struct {
+	SellerId uint64 `db:"seller_id"`
 	OfferId  uint64 `db:"offer_id"`
 	Name     string `db:"name"`
 	Price    uint64 `db:"price"`

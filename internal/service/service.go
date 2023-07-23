@@ -35,8 +35,8 @@ type Repository interface {
 // }
 
 type RequestFilter struct {
-	SellerId  uint64
-	OfferId   uint64
+	SellerIDs []uint64
+	OfferIDs  []uint64
 	Substring string
 }
 
