@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"log"
 	"testing"
 
 	"github.com/hablof/product-registration/internal/models"
@@ -228,7 +229,7 @@ func TestRepository_ProductsByFilter(t *testing.T) {
 			},
 			mockBehaviour: func(m sqlxmock.Sqlmock) {
 				reg := `SELECT`
-				m.ExpectQuery(reg).WithArgs(1, 2, 3, 1, "err").WillReturnError(errors.New("error query execution"))
+				m.ExpectQuery(reg).WithArgs(1, 2, 3, 1, `%err%`).WillReturnError(errors.New("error query execution"))
 			},
 			want:    nil,
 			wantErr: ErrQueryExecFailed,
@@ -294,7 +295,7 @@ func TestRepository_ProductsByFilter(t *testing.T) {
 					AddRow(6, 6, "submarine", 1, 1).
 					AddRow(9, 9, "subwoofer", 2, 2).
 					AddRow(20, 20, "subtitles", 1, 1)
-				m.ExpectQuery(reg).WithArgs("sub").WillReturnRows(rows)
+				m.ExpectQuery(reg).WithArgs(`%sub%`).WillReturnRows(rows)
 			},
 			want: []models.Product{
 				{SellerId: 6, OfferId: 6, Name: "submarine", Price: 1, Quantity: 1},
@@ -342,7 +343,7 @@ func TestRepository_ProductsByFilter(t *testing.T) {
 					AddRow(2, 3, "big boss", 3, 3).
 					AddRow(2, 10, "big spoon", 1, 1).
 					AddRow(3, 6, "big TV", 1, 1)
-				m.ExpectQuery(reg).WithArgs(1, 2, 3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "big").WillReturnRows(rows)
+				m.ExpectQuery(reg).WithArgs(1, 2, 3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, `%big%`).WillReturnRows(rows)
 			},
 			want: []models.Product{
 				{SellerId: 1, OfferId: 4, Name: "big changus", Price: 1, Quantity: 1},
@@ -358,6 +359,8 @@ func TestRepository_ProductsByFilter(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := NewRepository(db)
 			tt.mockBehaviour(mockCtrl)
+
+			log.Println(tt.name)
 
 			products, err := r.ProductsByFilter(tt.filter)
 			assert.Equal(t, tt.wantErr, err)

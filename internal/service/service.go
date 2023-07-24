@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"sort"
 
@@ -41,10 +40,10 @@ type RequestFilter struct {
 }
 
 type UpdateResults struct {
-	Added   uint64
-	Updated uint64
-	Deleted uint64
-	Errors  []error
+	Added   uint64  `json:"added"`
+	Updated uint64  `json:"updated"`
+	Deleted uint64  `json:"deleted"`
+	Errors  []error `json:"errors"`
 }
 
 func (s *Service) UpdateProducts(sellerId uint64, productUpdates []models.ProductUpdate) (UpdateResults, error) {
@@ -87,14 +86,14 @@ func (s *Service) UpdateProducts(sellerId uint64, productUpdates []models.Produc
 
 	for _, product := range toAdd {
 		if err := product.Validate(); err != nil {
-			validationErrs = append(validationErrs, fmt.Errorf("product invalid: id=%d, err=%v", product.OfferId, err))
+			validationErrs = append(validationErrs, err)
 		} else {
 			validToAdd = append(validToAdd, product)
 		}
 	}
 	for _, product := range toUpd {
 		if err := product.Validate(); err != nil {
-			validationErrs = append(validationErrs, fmt.Errorf("product invalid: id=%d, err=%v", product.OfferId, err))
+			validationErrs = append(validationErrs, err)
 		} else {
 			validToUpd = append(validToUpd, product)
 		}

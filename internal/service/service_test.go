@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/gojuno/minimock/v3"
@@ -506,8 +505,16 @@ func TestUpdateProducts(t *testing.T) {
 				Updated: 0,
 				Deleted: 0,
 				Errors: []error{
-					fmt.Errorf("product invalid: id=%d, err=%v", 16, models.ErrTooLongName),
-					fmt.Errorf("product invalid: id=%d, err=%v", 15, models.ErrTooLongName),
+					models.ErrProductValidation{
+						OfferId: 16,
+						Field:   "name",
+						ErrMsg:  models.MsgTooLongName,
+					},
+					models.ErrProductValidation{
+						OfferId: 15,
+						Field:   "name",
+						ErrMsg:  models.MsgTooLongName,
+					},
 				},
 			},
 			returnsError: nil,
