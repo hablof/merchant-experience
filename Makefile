@@ -1,5 +1,7 @@
 mock-service:
 	minimock -i ./internal/service.* -o ./internal/service
+mock-router:
+	minimock -i ./internal/router.* -o ./internal/router
 
 
 unit-test:

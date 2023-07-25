@@ -25,5 +25,24 @@ JSON схема для передачи таблицы с товарами:
 URL схема для получения списока товаров из базы:
 
 ``` url
-    host:port/?seller_id=1,2,3&offer_id=1,2,3&substring="substring"
+    host:port/?seller_id=15&offer_id=1,2,3&substring="substring"
+```
+Ответ в формате:
+``` json
+[
+    {
+        "sellerId": 15,
+        "offerId": 1,
+        "name": "name1",
+        "price": 100500,
+        "quantity": 150
+    },
+    {
+        "sellerId": 15,
+        "offerId": 2,
+        "name": "name2",
+        "price": 1000,
+        "quantity": 10
+    }
+]
 ```
