@@ -200,7 +200,7 @@ func TestRepository_ManageProducts(t *testing.T) {
 			r := NewRepository(db)
 			tt.mockBehaviour(mockCtrl)
 
-			err := r.ManageProducts(tt.sellerId, tt.productsToAdd, tt.productsToDelete, tt.productsToUpdate)
+			_, err := r.ManageProducts(tt.sellerId, tt.productsToAdd, tt.productsToDelete, tt.productsToUpdate)
 			assert.Equal(t, tt.wantErr, err)
 		})
 	}

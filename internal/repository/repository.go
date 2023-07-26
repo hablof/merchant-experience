@@ -50,10 +50,10 @@ func (r *Repository) ManageProducts(
 	productsToAdd []models.Product,
 	productsToDelete []models.Product,
 	productsToUpdate []models.Product,
-) error {
+) (numderOfDeletedProducts uint64, err error) {
 
 	if len(productsToAdd)+len(productsToUpdate)+len(productsToDelete) == 0 {
-		return ErrEmptyRequest
+		return 0, ErrEmptyRequest
 	}
 
 	// start transaction
@@ -62,7 +62,7 @@ func (r *Repository) ManageProducts(
 	tx, err := r.db.BeginTxx(ctx, &sql.TxOptions{})
 	if err != nil {
 		log.Println(err)
-		return ErrTxFailed
+		return 0, ErrTxFailed
 	}
 	defer tx.Rollback()
 
@@ -91,25 +91,26 @@ func (r *Repository) ManageProducts(
 		insertQueryString, insertQueryArgs, err := insertQuery.ToSql()
 		if err != nil {
 			log.Println(err)
-			return ErrQueryBuilderFailed
+			return 0, ErrQueryBuilderFailed
 		}
 
 		// execute insert
 		insertQueryResult, err := tx.ExecContext(ctx, insertQueryString, insertQueryArgs...)
 		if err != nil {
 			log.Println(err)
-			return ErrQueryExecFailed
+			return 0, ErrQueryExecFailed
 		}
 		rowsAffected, err := insertQueryResult.RowsAffected()
 		if err != nil {
 			log.Println(err)
-			return ErrQueryExecFailed
+			return 0, ErrQueryExecFailed
 		}
 		if rowsAffected != int64(len(productsToAdd)+len(productsToUpdate)) {
 			log.Println("missmatched sum of products to add/update and affected rows")
 		}
 	}
 
+	productsDeleted := uint64(0)
 	// delete query
 	if len(productsToDelete) > 0 {
 		// prepare delete query
@@ -121,30 +122,32 @@ func (r *Repository) ManageProducts(
 		deleteQueryString, deleteQueryArgs, err := deleteQuery.ToSql()
 		if err != nil {
 			log.Println(err)
-			return ErrQueryBuilderFailed
+			return 0, ErrQueryBuilderFailed
 		}
 		// execute delete query
 		deleteQueryResult, err := tx.ExecContext(ctx, deleteQueryString, deleteQueryArgs...)
 		if err != nil {
 			log.Println(err)
-			return ErrQueryExecFailed
+			return 0, ErrQueryExecFailed
 		}
 		rowsAffected, err := deleteQueryResult.RowsAffected()
 		if err != nil {
 			log.Println(err)
-			return ErrQueryExecFailed
+			return 0, ErrQueryExecFailed
 		}
 		if rowsAffected != int64(len(productsToDelete)) {
 			log.Println("missmatched sum of products to delete and affected rows")
 		}
+
+		productsDeleted = uint64(rowsAffected)
 	}
 
 	if err := tx.Commit(); err != nil {
 		log.Println(err)
-		return ErrTxFailed
+		return 0, ErrTxFailed
 	}
 
-	return nil
+	return productsDeleted, nil
 }
 
 func (r *Repository) ProductsByFilter(filter service.RequestFilter) ([]models.Product, error) {

@@ -40,7 +40,7 @@ func TestRepository(t *testing.T) {
 	setup(t, db)
 
 	t.Run("добавляем три записи", func(t *testing.T) {
-		if err := r.ManageProducts(0, productsToAdd, nil, nil); err != nil {
+		if _, err := r.ManageProducts(0, productsToAdd, nil, nil); err != nil {
 			assert.FailNow(t, err.Error())
 		}
 
@@ -61,7 +61,7 @@ func TestRepository(t *testing.T) {
 	})
 
 	t.Run("меняем все три добавленные записи", func(t *testing.T) {
-		if err := r.ManageProducts(0, nil, nil, productsToUpd); err != nil {
+		if _, err := r.ManageProducts(0, nil, nil, productsToUpd); err != nil {
 			assert.FailNow(t, err.Error())
 		}
 
@@ -83,9 +83,11 @@ func TestRepository(t *testing.T) {
 
 	t.Run("удаляем все три записи", func(t *testing.T) {
 		productsToDel := productsToUpd
-		if err := r.ManageProducts(0, nil, productsToDel, nil); err != nil {
+		deleted, err := r.ManageProducts(0, nil, productsToDel, nil)
+		if err != nil {
 			assert.FailNow(t, err.Error())
 		}
+		assert.Equal(t, uint64(3), deleted)
 
 		count := 0
 		if err := db.QueryRowx(`SELECT COUNT(*) FROM products;`).Scan(&count); err != nil {
