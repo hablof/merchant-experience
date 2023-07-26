@@ -16,6 +16,8 @@ var (
 	ErrEmptyDoc      = errors.New("empty document")
 	ErrEmptySheet    = errors.New("empty sheet")
 	ErrHasDuplicates = errors.New("sheet contain offer_id duplicates")
+	ErrInvalidIDs    = errors.New("offer_id column has invalid value(s)")
+	ErrFailedToRead  = errors.New("cannot read document")
 )
 
 type ErrProductParsing struct {
@@ -28,11 +30,18 @@ func (e ErrProductParsing) Error() string {
 	return fmt.Sprintf("product invalid: id=%d, field=%s, err=%s", e.Row, e.Field, e.ErrMsg)
 }
 
+type Parser struct{}
+
+func NewParser() Parser {
+	return Parser{}
+}
+
 // метод не знает ничего про seller_id
-func ParseProducts(r io.Reader) (productUpdates []models.ProductUpdate, productErrs []error, methodErr error) {
+func (Parser) ParseProducts(r io.Reader) (productUpdates []models.ProductUpdate, productErrs []error, methodErr error) {
 	f, err := excelize.OpenReader(r)
 	if err != nil {
-		return nil, nil, err
+		log.Println(err)
+		return nil, nil, ErrFailedToRead
 	}
 
 	defer func() {
@@ -44,6 +53,7 @@ func ParseProducts(r io.Reader) (productUpdates []models.ProductUpdate, productE
 
 	rows, err := prepare(f)
 	if err != nil {
+		log.Println(err)
 		return nil, nil, err
 	}
 
@@ -172,12 +182,11 @@ func prepare(f *excelize.File) ([][]string, error) {
 	}
 
 	offerIDs := make([]uint64, 0, len(cols[0]))
-	for lineNumber, str := range cols[0] {
+	for _, str := range cols[0] {
 		u, err := strconv.ParseUint(str, 10, 64)
 		if err != nil {
 			log.Println(err)
-			return nil, fmt.Errorf("failed to get product ids, row %d", lineNumber+1) // человеческая система счёта
-
+			return nil, ErrInvalidIDs // человеческая система счёта
 		}
 
 		offerIDs = append(offerIDs, u)

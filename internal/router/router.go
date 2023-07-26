@@ -104,10 +104,20 @@ func (h *Handler) PostTableURL(w http.ResponseWriter, r *http.Request, p httprou
 
 	productUpdates, productErrs, methodErr := h.ep.ParseProducts(table)
 	switch {
-	case errors.Is(methodErr, xlsxparser.ErrEmptyDoc) || errors.Is(methodErr, xlsxparser.ErrEmptySheet):
+	case errors.Is(methodErr, xlsxparser.ErrEmptyDoc),
+		errors.Is(methodErr, xlsxparser.ErrEmptySheet),
+		errors.Is(methodErr, xlsxparser.ErrFailedToRead):
+
 		w.WriteHeader(http.StatusBadRequest)
 		log.Println("bad xslx file")
 		fmt.Fprint(w, "bad xslx file")
+
+		return
+
+	case errors.Is(methodErr, xlsxparser.ErrInvalidIDs):
+		w.WriteHeader(http.StatusBadRequest)
+		log.Println("offer_id column has invalid value(s)")
+		fmt.Fprint(w, "offer_id column has invalid value(s)")
 
 		return
 

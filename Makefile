@@ -3,7 +3,7 @@ mock-service:
 mock-router:
 	minimock -i ./internal/router.* -o ./internal/router
 
-
+# юнит-тесты
 unit-test:
 	go test -test.short ./...
 
@@ -12,8 +12,11 @@ unit-test:
 up-test-db:
 	docker run -p 5432:5432 -e POSTGRES_PASSWORD=1234 -e POSTGRES_DB=integration_testing -d --name testing-postgres --rm postgres
 
-db-test:
+database-test:
 	go test internal/repository/repository_integration_test.go internal/repository/repository.go
+
+integration-test:
+	go test internal/*_test.go 
 
 down-test-db:
 	docker stop testing-postgres

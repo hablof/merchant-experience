@@ -12,8 +12,15 @@ type Service struct {
 	repo Repository
 }
 
+func NewService(r Repository) *Service {
+	s := Service{
+		repo: r,
+	}
+	return &s
+}
+
 type Repository interface {
-	SellerProducts(sellerId uint64) ([]models.Product, error)
+	// SellerProducts(sellerId uint64) ([]models.Product, error)
 	SellerProductIDs(sellerId uint64) ([]uint64, error)
 
 	// AddProducts(sellerId uint64, products []models.Product) error
