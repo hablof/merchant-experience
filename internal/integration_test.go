@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
@@ -23,6 +24,7 @@ const (
 	serverHostPort     = ":8015"
 	tableReqHostPort   = "http://127.0.0.1:8015"
 	respBodyWithErrors = `{"added":14,"updated":0,"deleted":0,"errors":[{"row":3,"field":"name","errMsg":"too long name"},{"row":4,"field":"price","errMsg":"strconv.ParseUint: parsing \"0-40\": invalid syntax"},{"row":5,"field":"price","errMsg":"strconv.ParseUint: parsing \"-666\": invalid syntax"},{"row":6,"field":"quantity","errMsg":"strconv.ParseUint: parsing \"0-40\": invalid syntax"},{"row":7,"field":"quantity","errMsg":"strconv.ParseUint: parsing \"-666\": invalid syntax"},{"row":8,"field":"available","errMsg":"strconv.ParseBool: parsing \"абра-кадабра\": invalid syntax"}]}`
+	sellerN2Updated    = `[{"sellerId":2,"offerId":1,"name":"head_updated","price":1000,"quantity":1000},{"sellerId":2,"offerId":2,"name":"body_updated","price":1000,"quantity":1000},{"sellerId":2,"offerId":3,"name":"name1_3_updated","price":1000,"quantity":1000},{"sellerId":2,"offerId":4,"name":"bigchangus_updated","price":1000,"quantity":1000},{"sellerId":2,"offerId":19,"name":"name15_10_updated","price":1000,"quantity":1000},{"sellerId":2,"offerId":20,"name":"subtitles_updated","price":1000,"quantity":1000}]`
 )
 
 type postTableJson struct {
@@ -90,108 +92,134 @@ func TestMicroservice(t *testing.T) {
 	databaseSetup(t, db)
 	defer databaseTeardown(t, db)
 
-	name := "post table with duplicates"
-	t.Run(name, func(t *testing.T) {
-		log.Println(name)
+	// ЗАПИСЬ
+	testsPostTable := []struct {
+		name        string
+		pathToTable string
+		sellerId    uint64
 
-		w, r := prepreWR(t, "/xlsxparser/test/example_duplicates.xlsx", 42)
-		handler.ServeHTTP(w, r)
+		wantStatusCode int
+		wantBody       string
+	}{
+		{
+			name:           "post table with duplicates",
+			pathToTable:    "/xlsxparser/test/example_duplicates.xlsx",
+			sellerId:       42,
+			wantStatusCode: http.StatusBadRequest,
+			wantBody:       "xslx file has duplicates",
+		},
+		{
+			name:           "post empty table",
+			pathToTable:    "/xlsxparser/test/example_empty.xlsx",
+			sellerId:       42,
+			wantStatusCode: http.StatusBadRequest,
+			wantBody:       "bad xslx file",
+		},
+		{
+			name:           "post table with invalid offer_id column",
+			pathToTable:    "/xlsxparser/test/example_with_invalid_offer_id_col.xlsx",
+			sellerId:       42,
+			wantStatusCode: http.StatusBadRequest,
+			wantBody:       "offer_id column has invalid value(s)",
+		},
+		{
+			name:           "post txt file",
+			pathToTable:    "/testtables/non-xlsx-file.txt",
+			sellerId:       42,
+			wantStatusCode: http.StatusBadRequest,
+			wantBody:       "bad xslx file",
+		},
+		{
+			name:           "post completly correct table with sellerId 1",
+			pathToTable:    "/testtables/01_correct.xlsx",
+			sellerId:       1,
+			wantStatusCode: http.StatusOK,
+			wantBody:       `{"added":20,"updated":0,"deleted":0,"errors":[]}`,
+		},
+		{
+			name:           "post completly correct table with sellerId 2 also",
+			pathToTable:    "/testtables/02_correct.xlsx",
+			sellerId:       2,
+			wantStatusCode: http.StatusOK,
+			wantBody:       `{"added":20,"updated":0,"deleted":0,"errors":[]}`,
+		},
+		{
+			name:           "post table with errors with sellerId 3",
+			pathToTable:    "/xlsxparser/test/example_with_errors.xlsx",
+			sellerId:       3,
+			wantStatusCode: http.StatusOK,
+			wantBody:       respBodyWithErrors,
+		},
+		{
+			name:           "post table with delete offerIDs 11..20 with sellerId 1",
+			pathToTable:    "/testtables/03_correct_delete.xlsx",
+			sellerId:       1,
+			wantStatusCode: http.StatusOK,
+			wantBody:       `{"added":0,"updated":0,"deleted":10,"errors":[]}`,
+		},
+		{
+			name:           "post table with update offerIDs 1..4,19,20 with sellerId 2",
+			pathToTable:    "/testtables/04_correct_update.xlsx",
+			sellerId:       2,
+			wantStatusCode: http.StatusOK,
+			wantBody:       `{"added":0,"updated":6,"deleted":0,"errors":[]}`,
+		},
+	}
 
-		assert.Equal(t, http.StatusBadRequest, w.Result().StatusCode)
-		assert.Equal(t, "xslx file has duplicates", w.Body.String())
-	})
+	for _, tt := range testsPostTable {
+		t.Run(tt.name, func(t *testing.T) {
+			log.Println(tt.name)
 
-	name = "post empty table"
-	t.Run(name, func(t *testing.T) {
-		log.Println(name)
+			w, r := preparePostWR(t, tt.pathToTable, tt.sellerId)
+			handler.ServeHTTP(w, r)
 
-		w, r := prepreWR(t, "/xlsxparser/test/example_empty.xlsx", 42)
-		handler.ServeHTTP(w, r)
+			assert.Equal(t, tt.wantStatusCode, w.Result().StatusCode)
+			assert.Equal(t, tt.wantBody, w.Body.String())
+		})
+	}
 
-		assert.Equal(t, http.StatusBadRequest, w.Result().StatusCode)
-		assert.Equal(t, "bad xslx file", w.Body.String())
-	})
+	// ЧТЕНИЕ
+	testsGet := []struct {
+		name       string
+		pSellerIDs string
+		pOfferIDs  string
+		pSubstring string
 
-	name = "post table with invalid offer_id column"
-	t.Run(name, func(t *testing.T) {
-		log.Println(name)
+		wantStatusCode int
+		wantBody       string
+	}{
+		{
+			name:           "updated seller's #2",
+			pSellerIDs:     "2",
+			pOfferIDs:      "",
+			pSubstring:     "updated",
+			wantStatusCode: 200,
+			wantBody:       sellerN2Updated,
+		},
+		{
+			name:           "",
+			pSellerIDs:     "",
+			pOfferIDs:      "1,2",
+			pSubstring:     "bo",
+			wantStatusCode: 200,
+			wantBody:       `[{"sellerId":1,"offerId":2,"name":"body_1","price":20,"quantity":0},{"sellerId":3,"offerId":2,"name":"body","price":20,"quantity":0},{"sellerId":2,"offerId":2,"name":"body_updated","price":1000,"quantity":1000}]`,
+		},
+	}
 
-		w, r := prepreWR(t, "/xlsxparser/test/example_with_invalid_offer_id_col.xlsx", 42)
-		handler.ServeHTTP(w, r)
+	for _, tt := range testsGet {
+		t.Run(tt.name, func(t *testing.T) {
+			log.Println(tt.name)
 
-		assert.Equal(t, http.StatusBadRequest, w.Result().StatusCode)
-		assert.Equal(t, "offer_id column has invalid value(s)", w.Body.String())
-	})
+			w, r := prepareGetWR(t, tt.pSellerIDs, tt.pOfferIDs, tt.pSubstring)
+			handler.ServeHTTP(w, r)
 
-	name = "post txt file"
-	t.Run(name, func(t *testing.T) {
-		log.Println(name)
-
-		w, r := prepreWR(t, "/testtables/non-xlsx-file.txt", 1)
-		handler.ServeHTTP(w, r)
-
-		assert.Equal(t, http.StatusBadRequest, w.Result().StatusCode)
-		assert.Equal(t, `bad xslx file`, w.Body.String())
-	})
-
-	name = "post completly correct table with sellerId 1"
-	t.Run(name, func(t *testing.T) {
-		log.Println(name)
-
-		w, r := prepreWR(t, "/testtables/01_correct.xlsx", 1)
-		handler.ServeHTTP(w, r)
-
-		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
-		assert.Equal(t, `{"added":20,"updated":0,"deleted":0,"errors":[]}`, w.Body.String())
-	})
-
-	name = "post completly correct table with sellerId 2 also"
-	t.Run(name, func(t *testing.T) {
-		log.Println(name)
-
-		w, r := prepreWR(t, "/testtables/02_correct.xlsx", 2)
-		handler.ServeHTTP(w, r)
-
-		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
-		assert.Equal(t, `{"added":20,"updated":0,"deleted":0,"errors":[]}`, w.Body.String())
-	})
-
-	name = "post table with errors with sellerId 3"
-	t.Run(name, func(t *testing.T) {
-		log.Println(name)
-
-		w, r := prepreWR(t, "/xlsxparser/test/example_with_errors.xlsx", 3)
-		handler.ServeHTTP(w, r)
-
-		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
-		assert.Equal(t, respBodyWithErrors, w.Body.String())
-	})
-
-	name = "post table with delete offerIDs 11..20 with sellerId 1"
-	t.Run(name, func(t *testing.T) {
-		log.Println(name)
-
-		w, r := prepreWR(t, "/testtables/03_correct_delete.xlsx", 1)
-		handler.ServeHTTP(w, r)
-
-		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
-		assert.Equal(t, `{"added":0,"updated":0,"deleted":10,"errors":[]}`, w.Body.String())
-	})
-
-	name = "post table with update offerIDs 1..4,19,20 with sellerId 2"
-	t.Run(name, func(t *testing.T) {
-		log.Println(name)
-
-		w, r := prepreWR(t, "/testtables/04_correct_update.xlsx", 2)
-		handler.ServeHTTP(w, r)
-
-		assert.Equal(t, http.StatusOK, w.Result().StatusCode)
-		assert.Equal(t, `{"added":0,"updated":6,"deleted":0,"errors":[]}`, w.Body.String())
-	})
-
+			assert.Equal(t, tt.wantStatusCode, w.Result().StatusCode)
+			assert.Equal(t, tt.wantBody, w.Body.String())
+		})
+	}
 }
 
-func prepreWR(t *testing.T, path string, sellerId uint64) (*httptest.ResponseRecorder, *http.Request) {
+func preparePostWR(t *testing.T, path string, sellerId uint64) (*httptest.ResponseRecorder, *http.Request) {
 	w := httptest.NewRecorder()
 
 	buf, err := json.Marshal(postTableJson{
@@ -204,5 +232,25 @@ func prepreWR(t *testing.T, path string, sellerId uint64) (*httptest.ResponseRec
 	bodyReader := bytes.NewBuffer(buf)
 
 	testRequest := httptest.NewRequest(http.MethodPost, "/", bodyReader)
+	return w, testRequest
+}
+
+func prepareGetWR(t *testing.T, pSellerIDs string, pOfferIDs string, pSubstring string) (*httptest.ResponseRecorder, *http.Request) {
+	w := httptest.NewRecorder()
+
+	paramVals := url.Values{}
+	if pSellerIDs != "" {
+		paramVals.Add("seller_id", pSellerIDs)
+	}
+	if pOfferIDs != "" {
+		paramVals.Add("offer_id", pOfferIDs)
+	}
+	if pSubstring != "" {
+		paramVals.Add("substring", pSubstring)
+	}
+
+	testRequest := httptest.NewRequest(http.MethodGet, "/", nil)
+	testRequest.URL.RawQuery = paramVals.Encode()
+
 	return w, testRequest
 }
