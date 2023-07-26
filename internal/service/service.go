@@ -31,7 +31,7 @@ type Repository interface {
 		productsToAdd []models.Product,
 		productsToDelete []models.Product,
 		productsToUpdate []models.Product,
-	) error
+	) (uint64, error)
 
 	ProductsByFilter(filter RequestFilter) ([]models.Product, error)
 }
@@ -113,7 +113,8 @@ func (s *Service) UpdateProducts(sellerId uint64, productUpdates []models.Produc
 		return ur, nil
 	}
 
-	if err := s.repo.ManageProducts(sellerId, validToAdd, validToDel, validToUpd); err != nil {
+	actualDeleted, err := s.repo.ManageProducts(sellerId, validToAdd, validToDel, validToUpd)
+	if err != nil {
 		log.Println(err)
 		return UpdateResults{}, errors.New("repo err")
 	}
@@ -124,7 +125,7 @@ func (s *Service) UpdateProducts(sellerId uint64, productUpdates []models.Produc
 	return UpdateResults{
 		Added:   uint64(len(validToAdd)),
 		Updated: uint64(len(validToUpd)),
-		Deleted: uint64(len(validToDel)),
+		Deleted: actualDeleted,
 		Errors:  totalErrors,
 	}, nil
 }

@@ -17,7 +17,7 @@ import (
 type RepositoryMock struct {
 	t minimock.Tester
 
-	funcManageProducts          func(sellerId uint64, productsToAdd []models.Product, productsToDelete []models.Product, productsToUpdate []models.Product) (err error)
+	funcManageProducts          func(sellerId uint64, productsToAdd []models.Product, productsToDelete []models.Product, productsToUpdate []models.Product) (u1 uint64, err error)
 	inspectFuncManageProducts   func(sellerId uint64, productsToAdd []models.Product, productsToDelete []models.Product, productsToUpdate []models.Product)
 	afterManageProductsCounter  uint64
 	beforeManageProductsCounter uint64
@@ -34,12 +34,6 @@ type RepositoryMock struct {
 	afterSellerProductIDsCounter  uint64
 	beforeSellerProductIDsCounter uint64
 	SellerProductIDsMock          mRepositoryMockSellerProductIDs
-
-	funcSellerProducts          func(sellerId uint64) (pa1 []models.Product, err error)
-	inspectFuncSellerProducts   func(sellerId uint64)
-	afterSellerProductsCounter  uint64
-	beforeSellerProductsCounter uint64
-	SellerProductsMock          mRepositoryMockSellerProducts
 }
 
 // NewRepositoryMock returns a mock for Repository
@@ -57,9 +51,6 @@ func NewRepositoryMock(t minimock.Tester) *RepositoryMock {
 
 	m.SellerProductIDsMock = mRepositoryMockSellerProductIDs{mock: m}
 	m.SellerProductIDsMock.callArgs = []*RepositoryMockSellerProductIDsParams{}
-
-	m.SellerProductsMock = mRepositoryMockSellerProducts{mock: m}
-	m.SellerProductsMock.callArgs = []*RepositoryMockSellerProductsParams{}
 
 	return m
 }
@@ -91,6 +82,7 @@ type RepositoryMockManageProductsParams struct {
 
 // RepositoryMockManageProductsResults contains results of the Repository.ManageProducts
 type RepositoryMockManageProductsResults struct {
+	u1  uint64
 	err error
 }
 
@@ -126,7 +118,7 @@ func (mmManageProducts *mRepositoryMockManageProducts) Inspect(f func(sellerId u
 }
 
 // Return sets up results that will be returned by Repository.ManageProducts
-func (mmManageProducts *mRepositoryMockManageProducts) Return(err error) *RepositoryMock {
+func (mmManageProducts *mRepositoryMockManageProducts) Return(u1 uint64, err error) *RepositoryMock {
 	if mmManageProducts.mock.funcManageProducts != nil {
 		mmManageProducts.mock.t.Fatalf("RepositoryMock.ManageProducts mock is already set by Set")
 	}
@@ -134,12 +126,12 @@ func (mmManageProducts *mRepositoryMockManageProducts) Return(err error) *Reposi
 	if mmManageProducts.defaultExpectation == nil {
 		mmManageProducts.defaultExpectation = &RepositoryMockManageProductsExpectation{mock: mmManageProducts.mock}
 	}
-	mmManageProducts.defaultExpectation.results = &RepositoryMockManageProductsResults{err}
+	mmManageProducts.defaultExpectation.results = &RepositoryMockManageProductsResults{u1, err}
 	return mmManageProducts.mock
 }
 
 // Set uses given function f to mock the Repository.ManageProducts method
-func (mmManageProducts *mRepositoryMockManageProducts) Set(f func(sellerId uint64, productsToAdd []models.Product, productsToDelete []models.Product, productsToUpdate []models.Product) (err error)) *RepositoryMock {
+func (mmManageProducts *mRepositoryMockManageProducts) Set(f func(sellerId uint64, productsToAdd []models.Product, productsToDelete []models.Product, productsToUpdate []models.Product) (u1 uint64, err error)) *RepositoryMock {
 	if mmManageProducts.defaultExpectation != nil {
 		mmManageProducts.mock.t.Fatalf("Default expectation is already set for the Repository.ManageProducts method")
 	}
@@ -168,13 +160,13 @@ func (mmManageProducts *mRepositoryMockManageProducts) When(sellerId uint64, pro
 }
 
 // Then sets up Repository.ManageProducts return parameters for the expectation previously defined by the When method
-func (e *RepositoryMockManageProductsExpectation) Then(err error) *RepositoryMock {
-	e.results = &RepositoryMockManageProductsResults{err}
+func (e *RepositoryMockManageProductsExpectation) Then(u1 uint64, err error) *RepositoryMock {
+	e.results = &RepositoryMockManageProductsResults{u1, err}
 	return e.mock
 }
 
 // ManageProducts implements Repository
-func (mmManageProducts *RepositoryMock) ManageProducts(sellerId uint64, productsToAdd []models.Product, productsToDelete []models.Product, productsToUpdate []models.Product) (err error) {
+func (mmManageProducts *RepositoryMock) ManageProducts(sellerId uint64, productsToAdd []models.Product, productsToDelete []models.Product, productsToUpdate []models.Product) (u1 uint64, err error) {
 	mm_atomic.AddUint64(&mmManageProducts.beforeManageProductsCounter, 1)
 	defer mm_atomic.AddUint64(&mmManageProducts.afterManageProductsCounter, 1)
 
@@ -192,7 +184,7 @@ func (mmManageProducts *RepositoryMock) ManageProducts(sellerId uint64, products
 	for _, e := range mmManageProducts.ManageProductsMock.expectations {
 		if minimock.Equal(e.params, mm_params) {
 			mm_atomic.AddUint64(&e.Counter, 1)
-			return e.results.err
+			return e.results.u1, e.results.err
 		}
 	}
 
@@ -208,7 +200,7 @@ func (mmManageProducts *RepositoryMock) ManageProducts(sellerId uint64, products
 		if mm_results == nil {
 			mmManageProducts.t.Fatal("No results are set for the RepositoryMock.ManageProducts")
 		}
-		return (*mm_results).err
+		return (*mm_results).u1, (*mm_results).err
 	}
 	if mmManageProducts.funcManageProducts != nil {
 		return mmManageProducts.funcManageProducts(sellerId, productsToAdd, productsToDelete, productsToUpdate)
@@ -714,222 +706,6 @@ func (m *RepositoryMock) MinimockSellerProductIDsInspect() {
 	}
 }
 
-type mRepositoryMockSellerProducts struct {
-	mock               *RepositoryMock
-	defaultExpectation *RepositoryMockSellerProductsExpectation
-	expectations       []*RepositoryMockSellerProductsExpectation
-
-	callArgs []*RepositoryMockSellerProductsParams
-	mutex    sync.RWMutex
-}
-
-// RepositoryMockSellerProductsExpectation specifies expectation struct of the Repository.SellerProducts
-type RepositoryMockSellerProductsExpectation struct {
-	mock    *RepositoryMock
-	params  *RepositoryMockSellerProductsParams
-	results *RepositoryMockSellerProductsResults
-	Counter uint64
-}
-
-// RepositoryMockSellerProductsParams contains parameters of the Repository.SellerProducts
-type RepositoryMockSellerProductsParams struct {
-	sellerId uint64
-}
-
-// RepositoryMockSellerProductsResults contains results of the Repository.SellerProducts
-type RepositoryMockSellerProductsResults struct {
-	pa1 []models.Product
-	err error
-}
-
-// Expect sets up expected params for Repository.SellerProducts
-func (mmSellerProducts *mRepositoryMockSellerProducts) Expect(sellerId uint64) *mRepositoryMockSellerProducts {
-	if mmSellerProducts.mock.funcSellerProducts != nil {
-		mmSellerProducts.mock.t.Fatalf("RepositoryMock.SellerProducts mock is already set by Set")
-	}
-
-	if mmSellerProducts.defaultExpectation == nil {
-		mmSellerProducts.defaultExpectation = &RepositoryMockSellerProductsExpectation{}
-	}
-
-	mmSellerProducts.defaultExpectation.params = &RepositoryMockSellerProductsParams{sellerId}
-	for _, e := range mmSellerProducts.expectations {
-		if minimock.Equal(e.params, mmSellerProducts.defaultExpectation.params) {
-			mmSellerProducts.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmSellerProducts.defaultExpectation.params)
-		}
-	}
-
-	return mmSellerProducts
-}
-
-// Inspect accepts an inspector function that has same arguments as the Repository.SellerProducts
-func (mmSellerProducts *mRepositoryMockSellerProducts) Inspect(f func(sellerId uint64)) *mRepositoryMockSellerProducts {
-	if mmSellerProducts.mock.inspectFuncSellerProducts != nil {
-		mmSellerProducts.mock.t.Fatalf("Inspect function is already set for RepositoryMock.SellerProducts")
-	}
-
-	mmSellerProducts.mock.inspectFuncSellerProducts = f
-
-	return mmSellerProducts
-}
-
-// Return sets up results that will be returned by Repository.SellerProducts
-func (mmSellerProducts *mRepositoryMockSellerProducts) Return(pa1 []models.Product, err error) *RepositoryMock {
-	if mmSellerProducts.mock.funcSellerProducts != nil {
-		mmSellerProducts.mock.t.Fatalf("RepositoryMock.SellerProducts mock is already set by Set")
-	}
-
-	if mmSellerProducts.defaultExpectation == nil {
-		mmSellerProducts.defaultExpectation = &RepositoryMockSellerProductsExpectation{mock: mmSellerProducts.mock}
-	}
-	mmSellerProducts.defaultExpectation.results = &RepositoryMockSellerProductsResults{pa1, err}
-	return mmSellerProducts.mock
-}
-
-// Set uses given function f to mock the Repository.SellerProducts method
-func (mmSellerProducts *mRepositoryMockSellerProducts) Set(f func(sellerId uint64) (pa1 []models.Product, err error)) *RepositoryMock {
-	if mmSellerProducts.defaultExpectation != nil {
-		mmSellerProducts.mock.t.Fatalf("Default expectation is already set for the Repository.SellerProducts method")
-	}
-
-	if len(mmSellerProducts.expectations) > 0 {
-		mmSellerProducts.mock.t.Fatalf("Some expectations are already set for the Repository.SellerProducts method")
-	}
-
-	mmSellerProducts.mock.funcSellerProducts = f
-	return mmSellerProducts.mock
-}
-
-// When sets expectation for the Repository.SellerProducts which will trigger the result defined by the following
-// Then helper
-func (mmSellerProducts *mRepositoryMockSellerProducts) When(sellerId uint64) *RepositoryMockSellerProductsExpectation {
-	if mmSellerProducts.mock.funcSellerProducts != nil {
-		mmSellerProducts.mock.t.Fatalf("RepositoryMock.SellerProducts mock is already set by Set")
-	}
-
-	expectation := &RepositoryMockSellerProductsExpectation{
-		mock:   mmSellerProducts.mock,
-		params: &RepositoryMockSellerProductsParams{sellerId},
-	}
-	mmSellerProducts.expectations = append(mmSellerProducts.expectations, expectation)
-	return expectation
-}
-
-// Then sets up Repository.SellerProducts return parameters for the expectation previously defined by the When method
-func (e *RepositoryMockSellerProductsExpectation) Then(pa1 []models.Product, err error) *RepositoryMock {
-	e.results = &RepositoryMockSellerProductsResults{pa1, err}
-	return e.mock
-}
-
-// SellerProducts implements Repository
-func (mmSellerProducts *RepositoryMock) SellerProducts(sellerId uint64) (pa1 []models.Product, err error) {
-	mm_atomic.AddUint64(&mmSellerProducts.beforeSellerProductsCounter, 1)
-	defer mm_atomic.AddUint64(&mmSellerProducts.afterSellerProductsCounter, 1)
-
-	if mmSellerProducts.inspectFuncSellerProducts != nil {
-		mmSellerProducts.inspectFuncSellerProducts(sellerId)
-	}
-
-	mm_params := &RepositoryMockSellerProductsParams{sellerId}
-
-	// Record call args
-	mmSellerProducts.SellerProductsMock.mutex.Lock()
-	mmSellerProducts.SellerProductsMock.callArgs = append(mmSellerProducts.SellerProductsMock.callArgs, mm_params)
-	mmSellerProducts.SellerProductsMock.mutex.Unlock()
-
-	for _, e := range mmSellerProducts.SellerProductsMock.expectations {
-		if minimock.Equal(e.params, mm_params) {
-			mm_atomic.AddUint64(&e.Counter, 1)
-			return e.results.pa1, e.results.err
-		}
-	}
-
-	if mmSellerProducts.SellerProductsMock.defaultExpectation != nil {
-		mm_atomic.AddUint64(&mmSellerProducts.SellerProductsMock.defaultExpectation.Counter, 1)
-		mm_want := mmSellerProducts.SellerProductsMock.defaultExpectation.params
-		mm_got := RepositoryMockSellerProductsParams{sellerId}
-		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
-			mmSellerProducts.t.Errorf("RepositoryMock.SellerProducts got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
-		}
-
-		mm_results := mmSellerProducts.SellerProductsMock.defaultExpectation.results
-		if mm_results == nil {
-			mmSellerProducts.t.Fatal("No results are set for the RepositoryMock.SellerProducts")
-		}
-		return (*mm_results).pa1, (*mm_results).err
-	}
-	if mmSellerProducts.funcSellerProducts != nil {
-		return mmSellerProducts.funcSellerProducts(sellerId)
-	}
-	mmSellerProducts.t.Fatalf("Unexpected call to RepositoryMock.SellerProducts. %v", sellerId)
-	return
-}
-
-// SellerProductsAfterCounter returns a count of finished RepositoryMock.SellerProducts invocations
-func (mmSellerProducts *RepositoryMock) SellerProductsAfterCounter() uint64 {
-	return mm_atomic.LoadUint64(&mmSellerProducts.afterSellerProductsCounter)
-}
-
-// SellerProductsBeforeCounter returns a count of RepositoryMock.SellerProducts invocations
-func (mmSellerProducts *RepositoryMock) SellerProductsBeforeCounter() uint64 {
-	return mm_atomic.LoadUint64(&mmSellerProducts.beforeSellerProductsCounter)
-}
-
-// Calls returns a list of arguments used in each call to RepositoryMock.SellerProducts.
-// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
-func (mmSellerProducts *mRepositoryMockSellerProducts) Calls() []*RepositoryMockSellerProductsParams {
-	mmSellerProducts.mutex.RLock()
-
-	argCopy := make([]*RepositoryMockSellerProductsParams, len(mmSellerProducts.callArgs))
-	copy(argCopy, mmSellerProducts.callArgs)
-
-	mmSellerProducts.mutex.RUnlock()
-
-	return argCopy
-}
-
-// MinimockSellerProductsDone returns true if the count of the SellerProducts invocations corresponds
-// the number of defined expectations
-func (m *RepositoryMock) MinimockSellerProductsDone() bool {
-	for _, e := range m.SellerProductsMock.expectations {
-		if mm_atomic.LoadUint64(&e.Counter) < 1 {
-			return false
-		}
-	}
-
-	// if default expectation was set then invocations count should be greater than zero
-	if m.SellerProductsMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterSellerProductsCounter) < 1 {
-		return false
-	}
-	// if func was set then invocations count should be greater than zero
-	if m.funcSellerProducts != nil && mm_atomic.LoadUint64(&m.afterSellerProductsCounter) < 1 {
-		return false
-	}
-	return true
-}
-
-// MinimockSellerProductsInspect logs each unmet expectation
-func (m *RepositoryMock) MinimockSellerProductsInspect() {
-	for _, e := range m.SellerProductsMock.expectations {
-		if mm_atomic.LoadUint64(&e.Counter) < 1 {
-			m.t.Errorf("Expected call to RepositoryMock.SellerProducts with params: %#v", *e.params)
-		}
-	}
-
-	// if default expectation was set then invocations count should be greater than zero
-	if m.SellerProductsMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterSellerProductsCounter) < 1 {
-		if m.SellerProductsMock.defaultExpectation.params == nil {
-			m.t.Error("Expected call to RepositoryMock.SellerProducts")
-		} else {
-			m.t.Errorf("Expected call to RepositoryMock.SellerProducts with params: %#v", *m.SellerProductsMock.defaultExpectation.params)
-		}
-	}
-	// if func was set then invocations count should be greater than zero
-	if m.funcSellerProducts != nil && mm_atomic.LoadUint64(&m.afterSellerProductsCounter) < 1 {
-		m.t.Error("Expected call to RepositoryMock.SellerProducts")
-	}
-}
-
 // MinimockFinish checks that all mocked methods have been called the expected number of times
 func (m *RepositoryMock) MinimockFinish() {
 	if !m.minimockDone() {
@@ -938,8 +714,6 @@ func (m *RepositoryMock) MinimockFinish() {
 		m.MinimockProductsByFilterInspect()
 
 		m.MinimockSellerProductIDsInspect()
-
-		m.MinimockSellerProductsInspect()
 		m.t.FailNow()
 	}
 }
@@ -965,6 +739,5 @@ func (m *RepositoryMock) minimockDone() bool {
 	return done &&
 		m.MinimockManageProductsDone() &&
 		m.MinimockProductsByFilterDone() &&
-		m.MinimockSellerProductIDsDone() &&
-		m.MinimockSellerProductsDone()
+		m.MinimockSellerProductIDsDone()
 }

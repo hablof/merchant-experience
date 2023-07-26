@@ -73,12 +73,12 @@ func TestUpdateProducts(t *testing.T) {
 		mSellerProductIDs_ReturnsErr error
 		mSellerProductIDs_Behavior   func(rMock *RepositoryMock, expectedInput uint64, returns []uint64, returnsErr error)
 
-		mManageProducts_ExpectedToAdd []models.Product
-		mManageProducts_ExpectedToUpd []models.Product
-		mManageProducts_ExpectedToDel []models.Product
-		mManageProducts_Returns       UpdateResults
-		mManageProducts_ReturnsErr    error
-		mManageProducts_Behavior      func(rMock *RepositoryMock, expSellerId uint64, expToAdd []models.Product, expToUpd []models.Product, expToDel []models.Product, returns UpdateResults, returnsErr error)
+		mManageProducts_ExpectedToAdd  []models.Product
+		mManageProducts_ExpectedToUpd  []models.Product
+		mManageProducts_ExpectedToDel  []models.Product
+		mManageProducts_ReturnsDeleted uint64
+		mManageProducts_ReturnsErr     error
+		mManageProducts_Behavior       func(rMock *RepositoryMock, expSellerId uint64, expToAdd []models.Product, expToUpd []models.Product, expToDel []models.Product, returns uint64, returnsErr error)
 
 		shouldReturn UpdateResults
 		returnsError error
@@ -89,7 +89,7 @@ func TestUpdateProducts(t *testing.T) {
 			productUpdates: []models.ProductUpdate{},
 
 			mSellerProductIDs_Behavior: func(rMock *RepositoryMock, expectedInput uint64, returns []uint64, returnsErr error) {},
-			mManageProducts_Behavior: func(rMock *RepositoryMock, expSellerId uint64, expToAdd, expToUpd, expToDel []models.Product, returns UpdateResults, returnsErr error) {
+			mManageProducts_Behavior: func(rMock *RepositoryMock, expSellerId uint64, expToAdd, expToUpd, expToDel []models.Product, returns uint64, returnsErr error) {
 			},
 
 			returnsError: errors.New("empty request"),
@@ -154,17 +154,12 @@ func TestUpdateProducts(t *testing.T) {
 					Quantity: 20,
 				},
 			},
-			mManageProducts_ExpectedToUpd: []models.Product{},
-			mManageProducts_ExpectedToDel: []models.Product{},
-			mManageProducts_Returns: UpdateResults{
-				Added:   3,
-				Updated: 0,
-				Deleted: 0,
-				Errors:  []error{},
-			},
-			mManageProducts_ReturnsErr: nil,
-			mManageProducts_Behavior: func(rMock *RepositoryMock, expSellerId uint64, expectedToAdd, expectedToUpd, expectedToDel []models.Product, returns UpdateResults, returnsErr error) {
-				rMock.ManageProductsMock.Expect(1, expectedToAdd, expectedToDel, expectedToUpd).Return(returnsErr)
+			mManageProducts_ExpectedToUpd:  []models.Product{},
+			mManageProducts_ExpectedToDel:  []models.Product{},
+			mManageProducts_ReturnsDeleted: uint64(0),
+			mManageProducts_ReturnsErr:     nil,
+			mManageProducts_Behavior: func(rMock *RepositoryMock, expSellerId uint64, expectedToAdd, expectedToUpd, expectedToDel []models.Product, returns uint64, returnsErr error) {
+				rMock.ManageProductsMock.Expect(1, expectedToAdd, expectedToDel, expectedToUpd).Return(returns, returnsErr)
 			},
 
 			shouldReturn: UpdateResults{
@@ -236,14 +231,9 @@ func TestUpdateProducts(t *testing.T) {
 					Quantity: 20,
 				},
 			},
-			mManageProducts_ExpectedToDel: []models.Product{},
-			mManageProducts_Returns: UpdateResults{
-				Added:   0,
-				Updated: 3,
-				Deleted: 0,
-				Errors:  nil,
-			},
-			mManageProducts_ReturnsErr: nil,
+			mManageProducts_ExpectedToDel:  []models.Product{},
+			mManageProducts_ReturnsDeleted: uint64(0),
+			mManageProducts_ReturnsErr:     nil,
 
 			shouldReturn: UpdateResults{
 				Added:   0,
@@ -252,8 +242,8 @@ func TestUpdateProducts(t *testing.T) {
 				Errors:  []error{},
 			},
 			returnsError: nil,
-			mManageProducts_Behavior: func(rMock *RepositoryMock, expSellerId uint64, expToAdd, expToUpd, expToDel []models.Product, returns UpdateResults, returnsErr error) {
-				rMock.ManageProductsMock.Expect(expSellerId, expToAdd, expToDel, expToUpd).Return(returnsErr)
+			mManageProducts_Behavior: func(rMock *RepositoryMock, expSellerId uint64, expToAdd, expToUpd, expToDel []models.Product, returns uint64, returnsErr error) {
+				rMock.ManageProductsMock.Expect(expSellerId, expToAdd, expToDel, expToUpd).Return(returns, returnsErr)
 			},
 		},
 		{
@@ -318,15 +308,10 @@ func TestUpdateProducts(t *testing.T) {
 					Quantity: 20,
 				},
 			},
-			mManageProducts_Returns: UpdateResults{
-				Added:   0,
-				Updated: 0,
-				Deleted: 3,
-				Errors:  []error{},
-			},
-			mManageProducts_ReturnsErr: nil,
-			mManageProducts_Behavior: func(rMock *RepositoryMock, expSellerId uint64, expToAdd, expToUpd, expToDel []models.Product, returns UpdateResults, returnsErr error) {
-				rMock.ManageProductsMock.Expect(expSellerId, expToAdd, expToDel, expToUpd).Return(returnsErr)
+			mManageProducts_ReturnsDeleted: uint64(3),
+			mManageProducts_ReturnsErr:     nil,
+			mManageProducts_Behavior: func(rMock *RepositoryMock, expSellerId uint64, expToAdd, expToUpd, expToDel []models.Product, returns uint64, returnsErr error) {
+				rMock.ManageProductsMock.Expect(expSellerId, expToAdd, expToDel, expToUpd).Return(returns, returnsErr)
 			},
 
 			shouldReturn: UpdateResults{
@@ -446,15 +431,10 @@ func TestUpdateProducts(t *testing.T) {
 					Quantity: 5,
 				},
 			},
-			mManageProducts_Returns: UpdateResults{
-				Added:   2,
-				Updated: 2,
-				Deleted: 2,
-				Errors:  []error{},
-			},
-			mManageProducts_ReturnsErr: nil,
-			mManageProducts_Behavior: func(rMock *RepositoryMock, expSellerId uint64, expToAdd []models.Product, expToUpd []models.Product, expToDel []models.Product, returns UpdateResults, returnsErr error) {
-				rMock.ManageProductsMock.Expect(expSellerId, expToAdd, expToDel, expToUpd).Return(returnsErr)
+			mManageProducts_ReturnsDeleted: uint64(2),
+			mManageProducts_ReturnsErr:     nil,
+			mManageProducts_Behavior: func(rMock *RepositoryMock, expSellerId uint64, expToAdd []models.Product, expToUpd []models.Product, expToDel []models.Product, returns uint64, returnsErr error) {
+				rMock.ManageProductsMock.Expect(expSellerId, expToAdd, expToDel, expToUpd).Return(returns, returnsErr)
 			},
 			shouldReturn: UpdateResults{
 				Added:   2,
@@ -493,12 +473,12 @@ func TestUpdateProducts(t *testing.T) {
 			mSellerProductIDs_Behavior: func(rMock *RepositoryMock, expectedInput uint64, returns []uint64, returnsErr error) {
 				rMock.SellerProductIDsMock.Expect(expectedInput).Return(returns, returnsErr)
 			},
-			mManageProducts_ExpectedToAdd: []models.Product{},
-			mManageProducts_ExpectedToUpd: []models.Product{},
-			mManageProducts_ExpectedToDel: []models.Product{},
-			mManageProducts_Returns:       UpdateResults{},
-			mManageProducts_ReturnsErr:    nil,
-			mManageProducts_Behavior: func(rMock *RepositoryMock, expSellerId uint64, expToAdd []models.Product, expToUpd []models.Product, expToDel []models.Product, returns UpdateResults, returnsErr error) {
+			mManageProducts_ExpectedToAdd:  []models.Product{},
+			mManageProducts_ExpectedToUpd:  []models.Product{},
+			mManageProducts_ExpectedToDel:  []models.Product{},
+			mManageProducts_ReturnsDeleted: uint64(0),
+			mManageProducts_ReturnsErr:     nil,
+			mManageProducts_Behavior: func(rMock *RepositoryMock, expSellerId uint64, expToAdd []models.Product, expToUpd []models.Product, expToDel []models.Product, returns uint64, returnsErr error) {
 			},
 			shouldReturn: UpdateResults{
 				Added:   0,
@@ -525,7 +505,7 @@ func TestUpdateProducts(t *testing.T) {
 			mc := minimock.NewController(t)
 			rMock := NewRepositoryMock(mc)
 			tc.mSellerProductIDs_Behavior(rMock, tc.mSellerProductIDs_Expects, tc.mSellerProductIDs_Returns, tc.mSellerProductIDs_ReturnsErr)
-			tc.mManageProducts_Behavior(rMock, tc.sellerId, tc.mManageProducts_ExpectedToAdd, tc.mManageProducts_ExpectedToUpd, tc.mManageProducts_ExpectedToDel, tc.mManageProducts_Returns, tc.mManageProducts_ReturnsErr)
+			tc.mManageProducts_Behavior(rMock, tc.sellerId, tc.mManageProducts_ExpectedToAdd, tc.mManageProducts_ExpectedToUpd, tc.mManageProducts_ExpectedToDel, tc.mManageProducts_ReturnsDeleted, tc.mManageProducts_ReturnsErr)
 			s := Service{
 				repo: rMock,
 			}
