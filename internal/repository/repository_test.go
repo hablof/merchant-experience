@@ -368,3 +368,64 @@ func TestRepository_ProductsByFilter(t *testing.T) {
 		})
 	}
 }
+
+func TestRepository_SellerProductIDs(t *testing.T) {
+	db, mockCtrl, err := sqlxmock.Newx(sqlxmock.QueryMatcherOption(sqlxmock.QueryMatcherRegexp))
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	tests := []struct {
+		name          string
+		sellerId      uint64
+		mockBehaviour func(m sqlxmock.Sqlmock)
+		want          []uint64
+		wantErr       error
+	}{
+		{
+			name:     "valid query",
+			sellerId: 1,
+			mockBehaviour: func(m sqlxmock.Sqlmock) {
+				reg := `SELECT.+ WHERE seller_id =.+`
+				rows := sqlxmock.NewRows([]string{"offer_id"}).AddRow(1).AddRow(2).AddRow(3).AddRow(4).AddRow(5)
+				m.ExpectQuery(reg).WithArgs(1).WillReturnRows(rows)
+			},
+			want:    []uint64{1, 2, 3, 4, 5},
+			wantErr: nil,
+		},
+		{
+			name:     "valid query empty select",
+			sellerId: 2,
+			mockBehaviour: func(m sqlxmock.Sqlmock) {
+				reg := `SELECT.+ WHERE seller_id =.+`
+				rows := sqlxmock.NewRows([]string{"offer_id"})
+				m.ExpectQuery(reg).WithArgs(2).WillReturnRows(rows)
+			},
+			want:    []uint64{},
+			wantErr: nil,
+		},
+		{
+			name:     "query execution failed",
+			sellerId: 3,
+			mockBehaviour: func(m sqlxmock.Sqlmock) {
+				reg := `SELECT.+ WHERE seller_id =.+`
+				m.ExpectQuery(reg).WithArgs(3).WillReturnError(errors.New("some err"))
+			},
+			want:    nil,
+			wantErr: ErrQueryExecFailed,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := NewRepository(db)
+			tt.mockBehaviour(mockCtrl)
+
+			log.Println(tt.name)
+
+			products, err := r.SellerProductIDs(tt.sellerId)
+			assert.Equal(t, tt.wantErr, err)
+			assert.Equal(t, tt.want, products)
+		})
+	}
+}

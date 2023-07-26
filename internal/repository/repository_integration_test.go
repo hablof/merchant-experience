@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"testing"
 
 	sq "github.com/Masterminds/squirrel"
@@ -134,6 +135,30 @@ func TestRepository(t *testing.T) {
 			assert.FailNow(t, err.Error())
 		}
 		assert.Equal(t, int64(20), rowsAffected)
+	})
+
+	t.Run("проверка метода SellerProductIDs", func(t *testing.T) {
+
+		testCases := map[uint64][]uint64{
+			1:  {1, 2, 3, 4, 5, 6, 7, 33},
+			2:  {1, 3, 6, 10},
+			3:  {1, 5, 6},
+			4:  {},
+			5:  {5},
+			6:  {6},
+			7:  {},
+			9:  {9},
+			15: {10},
+			20: {20},
+		}
+
+		for k, v := range testCases {
+			offerIDs, err := r.SellerProductIDs(k)
+			if err != nil {
+				assert.FailNow(t, err.Error())
+			}
+			assert.Equal(t, v, offerIDs, fmt.Sprintf("SellerProductIDs with key \"%d\"", k))
+		}
 	})
 
 	t.Run("выбираем по айди продавца", func(t *testing.T) {

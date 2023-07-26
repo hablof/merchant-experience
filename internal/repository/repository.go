@@ -185,3 +185,22 @@ func (r *Repository) ProductsByFilter(filter service.RequestFilter) ([]models.Pr
 
 	return products, nil
 }
+
+func (r *Repository) SellerProductIDs(sellerId uint64) ([]uint64, error) {
+	selectQueryString, args, err := r.initQuery.Select(offerIdCol).From(tableName).Where(sq.Eq{sellerIdCol: sellerId}).ToSql()
+	if err != nil {
+		log.Println(err)
+		return nil, ErrQueryBuilderFailed
+	}
+
+	ctx, cf := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cf()
+
+	productIDs := make([]uint64, 0)
+	if err := r.db.SelectContext(ctx, &productIDs, selectQueryString, args...); err != nil {
+		log.Println(err)
+		return nil, ErrQueryExecFailed
+	}
+
+	return productIDs, nil
+}
