@@ -10,12 +10,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hablof/product-registration/internal/config"
 	"github.com/hablof/product-registration/internal/database"
 	"github.com/hablof/product-registration/internal/gateway"
+	"github.com/hablof/product-registration/internal/pkg/testfileserver"
 	"github.com/hablof/product-registration/internal/repository"
 	"github.com/hablof/product-registration/internal/router"
 	"github.com/hablof/product-registration/internal/service"
 	"github.com/hablof/product-registration/internal/xlsxparser"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 )
@@ -68,7 +71,7 @@ func TestMicroservice(t *testing.T) {
 	// setup
 	fileServer := &http.Server{
 		Addr:        serverHostPort,
-		Handler:     newTestServerHandler(),
+		Handler:     testfileserver.NewTestServerHandler(),
 		ReadTimeout: 1 * time.Second,
 	}
 	go func(testServer *http.Server) {
@@ -78,14 +81,21 @@ func TestMicroservice(t *testing.T) {
 	}(fileServer)
 	defer fileServer.Close()
 
-	db, err := database.NewPostgres()
+	cfg := config.Config{
+		Server:     config.Server{Timeout: 5},
+		Database:   config.Database{HostLocal: "localhost", Port: "5432", User: "postgres", Password: "1234", DBName: "integration_testing"},
+		Repository: config.Repository{Timeout: 5},
+		Gateway:    config.Gateway{Timeout: 5},
+	}
+
+	db, err := database.NewPostgres(cfg, false)
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, "no database connection")
 	}
 
-	r := repository.NewRepository(db)
+	r := repository.NewRepository(db, cfg)
 	s := service.NewService(r)
-	g := gateway.NewGateway()
+	g := gateway.NewGateway(cfg)
 	p := xlsxparser.NewParser()
 	handler := router.NewRouter(s, g, p)
 

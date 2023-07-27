@@ -5,6 +5,7 @@ import (
 	"log"
 	"testing"
 
+	"github.com/hablof/product-registration/internal/config"
 	"github.com/hablof/product-registration/internal/models"
 	"github.com/hablof/product-registration/internal/service"
 	"github.com/stretchr/testify/assert"
@@ -197,7 +198,8 @@ func TestRepository_ManageProducts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := NewRepository(db)
+			cfg := config.Config{Repository: config.Repository{Timeout: 5}}
+			r := NewRepository(db, cfg)
 			tt.mockBehaviour(mockCtrl)
 
 			_, err := r.ManageProducts(tt.sellerId, tt.productsToAdd, tt.productsToDelete, tt.productsToUpdate)
@@ -357,7 +359,8 @@ func TestRepository_ProductsByFilter(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := NewRepository(db)
+			cfg := config.Config{Repository: config.Repository{Timeout: 5}}
+			r := NewRepository(db, cfg)
 			tt.mockBehaviour(mockCtrl)
 
 			log.Println(tt.name)
@@ -418,7 +421,8 @@ func TestRepository_SellerProductIDs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := NewRepository(db)
+			cfg := config.Config{Repository: config.Repository{Timeout: 5}}
+			r := NewRepository(db, cfg)
 			tt.mockBehaviour(mockCtrl)
 
 			log.Println(tt.name)

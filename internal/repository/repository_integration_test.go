@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/hablof/product-registration/internal/config"
 	"github.com/hablof/product-registration/internal/database"
 	"github.com/hablof/product-registration/internal/models"
 	"github.com/hablof/product-registration/internal/service"
@@ -29,12 +30,23 @@ func TestRepository(t *testing.T) {
 	if testing.Short() {
 		t.SkipNow()
 	}
-	db, err := database.NewPostgres()
+
+	cfg := config.Config{
+		Database: config.Database{
+			HostLocal: "localhost",
+			Port:      "5432",
+			User:      "postgres",
+			Password:  "1234",
+			DBName:    "integration_testing",
+		},
+		Repository: config.Repository{Timeout: 5},
+	}
+	db, err := database.NewPostgres(cfg, false)
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, "no database connection")
 	}
 
-	r := NewRepository(db)
+	r := NewRepository(db, cfg)
 
 	defer teardown(t, db)
 	setup(t, db)

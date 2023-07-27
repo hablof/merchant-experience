@@ -7,9 +7,11 @@ import (
 	"log"
 	"time"
 
-	sq "github.com/Masterminds/squirrel"
+	"github.com/hablof/product-registration/internal/config"
 	"github.com/hablof/product-registration/internal/models"
 	"github.com/hablof/product-registration/internal/service"
+
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -36,12 +38,14 @@ var (
 type Repository struct {
 	db        *sqlx.DB
 	initQuery sq.StatementBuilderType
+	dbTimeout time.Duration
 }
 
-func NewRepository(db *sqlx.DB) *Repository {
+func NewRepository(db *sqlx.DB, cfg config.Config) *Repository {
 	return &Repository{
 		db:        db,
 		initQuery: sq.StatementBuilder.PlaceholderFormat(sq.Dollar), // Postgress
+		dbTimeout: time.Duration(cfg.Repository.Timeout) * time.Second,
 	}
 }
 
@@ -57,7 +61,7 @@ func (r *Repository) ManageProducts(
 	}
 
 	// start transaction
-	ctx, cf := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cf := context.WithTimeout(context.Background(), r.dbTimeout)
 	defer cf()
 	tx, err := r.db.BeginTxx(ctx, &sql.TxOptions{})
 	if err != nil {
@@ -177,7 +181,7 @@ func (r *Repository) ProductsByFilter(filter service.RequestFilter) ([]models.Pr
 		return nil, ErrQueryBuilderFailed
 	}
 
-	ctx, cf := context.WithTimeout(context.Background(), 15*time.Second)
+	ctx, cf := context.WithTimeout(context.Background(), r.dbTimeout)
 	defer cf()
 
 	products := make([]models.Product, 0)
@@ -196,7 +200,7 @@ func (r *Repository) SellerProductIDs(sellerId uint64) ([]uint64, error) {
 		return nil, ErrQueryBuilderFailed
 	}
 
-	ctx, cf := context.WithTimeout(context.Background(), 15*time.Second)
+	ctx, cf := context.WithTimeout(context.Background(), r.dbTimeout)
 	defer cf()
 
 	productIDs := make([]uint64, 0)

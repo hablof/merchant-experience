@@ -1,4 +1,4 @@
-package internal
+package testfileserver
 
 import (
 	"net/http"
@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func newTestServerHandler() http.Handler {
+func NewTestServerHandler() http.Handler {
 	fs := fileServer{}
 
 	sm := http.NewServeMux()

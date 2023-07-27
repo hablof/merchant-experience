@@ -1,0 +1,20 @@
+# project:
+#   debug: true
+
+server:
+  port: "8000"
+  timeout: 15
+
+database:
+  host-local: "localhost" 
+  host-docker: "postgres"
+  port: "5432"
+  user: "postgres"
+  password: "1234"
+  dbname: "merchant_experience"
+
+repository:
+  timeout: 10
+
+gateway:
+  timeout: 15

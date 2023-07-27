@@ -8,14 +8,16 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/hablof/product-registration/internal/config"
 )
 
 type Gateway struct {
 	hc http.Client
 }
 
-func NewGateway() *Gateway {
-	c := http.Client{Timeout: 10 * time.Second}
+func NewGateway(cfg config.Config) *Gateway {
+	c := http.Client{Timeout: time.Duration(cfg.Gateway.Timeout) * time.Second}
 
 	return &Gateway{
 		hc: c,

@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/hablof/product-registration/internal/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -43,7 +44,8 @@ func TestGateway_Table(t *testing.T) {
 
 			server := httptest.NewServer(newTestHandler(tt.fileToServe, tt.respStatus200))
 
-			g := NewGateway()
+			cfg := config.Config{Gateway: config.Gateway{Timeout: 5}}
+			g := NewGateway(cfg)
 
 			r, err := g.Table(server.URL)
 
