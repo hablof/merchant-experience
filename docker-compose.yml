@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+
+  merchant-experience:
+    image: hablof/merchant-experience
+    environment:
+      CONTAINER: yes
+    restart: no
+    depends_on:
+      - postgres
+    ports:
+      - 8000:8000
+    volumes:
+      - ./config.yml:/root/config.yml
+
+
+  postgres:
+    image: postgres:latest
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: merchant_experience
+      # APP_DB_USER: docker
+      # APP_DB_PASS: docker
+      # POSTGRES_INITDB_ARGS: '--encoding=UTF-8 --lc-collate=C --lc-ctype=C'
+    volumes:
+      - MXpgdata:/var/lib/postgresql/data
+
+volumes:
+  MXpgdata:

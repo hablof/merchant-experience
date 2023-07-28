@@ -8,13 +8,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/hablof/product-registration/internal/config"
-	"github.com/hablof/product-registration/internal/database"
-	"github.com/hablof/product-registration/internal/gateway"
-	"github.com/hablof/product-registration/internal/repository"
-	"github.com/hablof/product-registration/internal/router"
-	"github.com/hablof/product-registration/internal/service"
-	"github.com/hablof/product-registration/internal/xlsxparser"
+	"github.com/hablof/merchant-experience/internal/config"
+	"github.com/hablof/merchant-experience/internal/database"
+	"github.com/hablof/merchant-experience/internal/gateway"
+	"github.com/hablof/merchant-experience/internal/repository"
+	"github.com/hablof/merchant-experience/internal/router"
+	"github.com/hablof/merchant-experience/internal/service"
+	"github.com/hablof/merchant-experience/internal/xlsxparser"
 	"github.com/pressly/goose/v3"
 )
 

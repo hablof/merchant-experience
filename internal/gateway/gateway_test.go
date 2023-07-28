@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hablof/product-registration/internal/config"
+	"github.com/hablof/merchant-experience/internal/config"
 	"github.com/stretchr/testify/assert"
 )
 

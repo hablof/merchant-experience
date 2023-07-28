@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/hablof/product-registration/internal/config"
+	"github.com/hablof/merchant-experience/internal/config"
 )
 
 type Gateway struct {

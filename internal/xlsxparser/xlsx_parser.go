@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hablof/product-registration/internal/models"
+	"github.com/hablof/merchant-experience/internal/models"
 	"github.com/xuri/excelize/v2"
 )
 

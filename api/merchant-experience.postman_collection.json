@@ -13,7 +13,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"tableURL\": \"http://127.0.0.1:8015/internal/xlsxparser/test/example_duplicates.xlsx\",\r\n    \"sellerId\": 42\r\n}",
+					"raw": "{\r\n    \"tableURL\": \"http://host.docker.internal:8015/internal/xlsxparser/test/example_duplicates.xlsx\",\r\n    \"sellerId\": 42\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -40,7 +40,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"tableURL\": \"http://127.0.0.1:8015/internal/testtables/01_correct.xlsx\",\r\n    \"sellerId\": 42\r\n}",
+					"raw": "{\r\n    \"tableURL\": \"http://host.docker.internal:8015/internal/testtables/01_correct.xlsx\",\r\n    \"sellerId\": 42\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -67,7 +67,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"tableURL\": \"http://127.0.0.1:8015/internal/testtables/02_correct.xlsx\",\r\n    \"sellerId\": 41\r\n}",
+					"raw": "{\r\n    \"tableURL\": \"http://host.docker.internal:8015/internal/testtables/02_correct.xlsx\",\r\n    \"sellerId\": 41\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -94,7 +94,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"tableURL\": \"http://127.0.0.1:8015/internal/testtables/03_correct_delete.xlsx\",\r\n    \"sellerId\": 42\r\n}",
+					"raw": "{\r\n    \"tableURL\": \"http://host.docker.internal:8015/internal/testtables/03_correct_delete.xlsx\",\r\n    \"sellerId\": 42\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -121,7 +121,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"tableURL\": \"http://127.0.0.1:8015/internal/testtables/04_correct_update.xlsx\",\r\n    \"sellerId\": 41\r\n}",
+					"raw": "{\r\n    \"tableURL\": \"http://host.docker.internal:8015/internal/testtables/04_correct_update.xlsx\",\r\n    \"sellerId\": 41\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -148,7 +148,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"tableURL\": \"http://127.0.0.1:8015/internal/xlsxparser/test/example_with_errors.xlsx\",\r\n    \"sellerId\": 43\r\n}",
+					"raw": "{\r\n    \"tableURL\": \"http://host.docker.internal:8015/internal/xlsxparser/test/example_with_errors.xlsx\",\r\n    \"sellerId\": 43\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"

@@ -1,4 +1,4 @@
-module github.com/hablof/product-registration
+module github.com/hablof/merchant-experience
 
 go 1.20
 

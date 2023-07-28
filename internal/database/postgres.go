@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/hablof/product-registration/internal/config"
+	"github.com/hablof/merchant-experience/internal/config"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"

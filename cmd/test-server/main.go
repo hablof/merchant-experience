@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/hablof/product-registration/internal/pkg/testfileserver"
+	"github.com/hablof/merchant-experience/internal/pkg/testfileserver"
 )
 
 const (

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hablof/product-registration/internal/models"
+	"github.com/hablof/merchant-experience/internal/models"
 	"github.com/stretchr/testify/assert"
 )
 

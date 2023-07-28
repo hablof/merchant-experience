@@ -31,9 +31,20 @@ down-local-db:
 	docker stop local-postgres
 
 
+### docker build
+vendor:
+	go mod vendor
+docker-image:
+	docker build -t hablof/merchant-experience .
+
+
 ### запуски
 run: 
 	go run cmd/app/main.go
 run-testserver:
 	go run cmd/test-server/main.go
-run-docker:
+	
+up:
+	docker-compose up -d
+down:
+	docker-compose down

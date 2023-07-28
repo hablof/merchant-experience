@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/gojuno/minimock/v3"
-	"github.com/hablof/product-registration/internal/models"
+	"github.com/hablof/merchant-experience/internal/models"
 	"github.com/stretchr/testify/assert"
 )
 

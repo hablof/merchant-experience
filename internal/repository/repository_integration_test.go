@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/hablof/product-registration/internal/config"
-	"github.com/hablof/product-registration/internal/database"
-	"github.com/hablof/product-registration/internal/models"
-	"github.com/hablof/product-registration/internal/service"
+	"github.com/hablof/merchant-experience/internal/config"
+	"github.com/hablof/merchant-experience/internal/database"
+	"github.com/hablof/merchant-experience/internal/models"
+	"github.com/hablof/merchant-experience/internal/service"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 )

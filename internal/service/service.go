@@ -5,7 +5,7 @@ import (
 	"log"
 	"sort"
 
-	"github.com/hablof/product-registration/internal/models"
+	"github.com/hablof/merchant-experience/internal/models"
 )
 
 type Service struct {

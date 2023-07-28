@@ -12,9 +12,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hablof/product-registration/internal/models"
-	"github.com/hablof/product-registration/internal/service"
-	xlsxparser "github.com/hablof/product-registration/internal/xlsxparser"
+	"github.com/hablof/merchant-experience/internal/models"
+	"github.com/hablof/merchant-experience/internal/service"
+	xlsxparser "github.com/hablof/merchant-experience/internal/xlsxparser"
 	"github.com/stretchr/testify/assert"
 )
 
