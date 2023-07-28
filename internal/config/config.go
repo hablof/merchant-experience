@@ -15,13 +15,13 @@ type Config struct {
 }
 
 type Server struct {
-	Port    string `yaml:"port:"`
+	Port    string `yaml:"port"`
 	Timeout int64  `yaml:"timeout"`
 }
 
 type Database struct {
 	HostLocal  string `yaml:"host-local"`
-	HostDocker string `yaml:"host-local"`
+	HostDocker string `yaml:"host-docker"`
 	Port       string `yaml:"port"`
 	User       string `yaml:"user"`
 	Password   string `yaml:"password"`

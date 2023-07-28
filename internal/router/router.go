@@ -76,7 +76,7 @@ func (h *Handler) PanicHanler(w http.ResponseWriter, r *http.Request, _ interfac
 func (h *Handler) PostTableURL(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	b := make([]byte, r.ContentLength)
-	if _, err := r.Body.Read(b); err != nil {
+	if _, err := r.Body.Read(b); err != nil && err != io.EOF {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Println("unable to read body: " + err.Error())
 		fmt.Fprint(w, "unable to read body")
@@ -155,6 +155,9 @@ func (h *Handler) PostTableURL(w http.ResponseWriter, r *http.Request, p httprou
 		return
 	}
 
+	w.Header().Add("Content-Type", "text/plain")
+	w.Header().Add("Content-Type", "charset=utf-8")
+
 	w.WriteHeader(http.StatusOK)
 	w.Write(b2)
 }
@@ -213,6 +216,9 @@ func (h *Handler) GetProducts(w http.ResponseWriter, r *http.Request, _ httprout
 
 		return
 	}
+
+	w.Header().Add("Content-Type", "application/json")
+	w.Header().Add("Content-Type", "charset=utf-8")
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(b)

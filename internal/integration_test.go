@@ -218,7 +218,7 @@ func TestMicroservice(t *testing.T) {
 
 	for _, tt := range testsGet {
 		t.Run(tt.name, func(t *testing.T) {
-			log.Println(tt.name)
+			log.Println("testcase =", tt.name)
 
 			w, r := prepareGetWR(t, tt.pSellerIDs, tt.pOfferIDs, tt.pSubstring)
 			handler.ServeHTTP(w, r)
