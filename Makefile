@@ -26,13 +26,14 @@ integration-test:
 
 ### подъём базы в докере для локальной работы
 up-local-db:
-	docker run -p 5432:5432 -e POSTGRES_PASSWORD=1234 -e POSTGRES_DB=merchant_experience  -v MXpgdata:/var/lib/postgresql/data -d --name local-postgres --rm postgres
+	docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=merchant_experience -v pgdata:/var/lib/postgresql/data -d --name local-postgres --rm postgres
 down-local-db:
 	docker stop local-postgres
 
 
 ### docker build
 vendor:
+	go mod download
 	go mod vendor
 docker-image:
 	docker build -t hablof/merchant-experience .
@@ -43,7 +44,7 @@ run:
 	go run cmd/app/main.go
 run-testserver:
 	go run cmd/test-server/main.go
-	
+
 up:
 	docker-compose up -d
 down:

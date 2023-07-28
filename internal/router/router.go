@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/hablof/merchant-experience/internal/models"
+	"github.com/hablof/merchant-experience/internal/router/middleware"
 	"github.com/hablof/merchant-experience/internal/service"
 	xlsxparser "github.com/hablof/merchant-experience/internal/xlsxparser"
 
@@ -64,7 +65,7 @@ func NewRouter(
 	r.POST("/", h.PostTableURL)
 	r.PanicHandler = h.PanicHanler
 
-	return r
+	return middleware.LogRequest(r.ServeHTTP)
 }
 
 func (h *Handler) PanicHanler(w http.ResponseWriter, r *http.Request, _ interface{}) {

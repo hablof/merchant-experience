@@ -15,6 +15,7 @@ import (
 	"github.com/hablof/merchant-experience/internal/router"
 	"github.com/hablof/merchant-experience/internal/service"
 	"github.com/hablof/merchant-experience/internal/xlsxparser"
+
 	"github.com/pressly/goose/v3"
 )
 
@@ -33,6 +34,7 @@ func main() {
 	db, err := database.NewPostgres(cfg, inDocker)
 	if err != nil {
 		log.Printf("no database connection: %v", err)
+		return
 	}
 
 	if err := goose.SetDialect("postgres"); err != nil {
