@@ -7,8 +7,9 @@ mock-router:
 
 ### юнит-тесты
 unit-test:
-	go test -test.short ./...
-
+	go test -coverprofile=cover.out -test.short ./...
+show-cover:
+	go tool cover -html=cover.out
 
 ### подъём базы в докере для тестов
 up-test-db:
